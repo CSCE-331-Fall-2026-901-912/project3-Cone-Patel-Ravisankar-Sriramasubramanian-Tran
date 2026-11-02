@@ -59,7 +59,31 @@ export function getRecentlyReady(limit = 5) {
     .reverse();
 }
 
+// Future: GET /api/orders?status=ready (newest completed first)
+export function getCompletedOrders() {
+  return readAll()
+    .filter((o) => o.status === "ready")
+    .sort((a, b) => (b.completedAt ?? b.placedAt) - (a.completedAt ?? a.placedAt));
+}
+
 // Future: PATCH /api/orders/:number { status }
+// Also records when an order was started and completed for the kitchen history.
 export function updateStatus(number, status) {
-  save(KEY, readAll().map((o) => (o.number === number ? { ...o, status } : o)));
+  const now = Date.now();
+  save(
+    KEY,
+    readAll().map((o) => {
+      if (o.number !== number) return o;
+      const updated = { ...o, status };
+      if (status === "in-progress") {
+        updated.startedAt = o.startedAt ?? now;
+        delete updated.completedAt; // a recalled order is no longer complete
+      }
+      if (status === "ready") {
+        updated.startedAt = o.startedAt ?? now;
+        updated.completedAt = now;
+      }
+      return updated;
+    })
+  );
 }

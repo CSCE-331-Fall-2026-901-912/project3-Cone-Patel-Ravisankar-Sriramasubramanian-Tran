@@ -16,9 +16,13 @@ export default function CashierScreen() {
   const [customizing, setCustomizing] = useState(null);
   const [cart, setCart] = useState([]);
   const [message, setMessage] = useState("");
+  const [search, setSearch] = useState("");
 
   const { subtotal, tax, total } = orderTotals(cart);
   const employee = employees.find((e) => e.id === Number(employeeId));
+
+const query = search.trim().toLowerCase();
+const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(query)) : menu;
 
   function addToCart(item) {
     setCart([...cart, { ...item, cartId: crypto.randomUUID() }]);

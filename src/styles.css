@@ -525,3 +525,219 @@ h1, h2, .hub-card-title {
     width: 100%;
   }
 }
+
+
+/* ==========================================
+   Boba Bliss - Retro Manager Dashboard Theme
+   ========================================== */
+
+/* Main layout */
+.manager {
+  background: #FFF8F1;
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+/* Cream and pink sidebar */
+.manager .manager-nav {
+  background: #FBE7E2;
+  color: #58392F;
+  border-right: 2px solid #E9CFC3;
+  padding: 2rem 1rem;
+  gap: 0.5rem;
+}
+
+/* Boba Bliss branding */
+.manager .manager-brand {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+  color: #98634B;
+  padding: 0 0.75rem;
+}
+
+.manager .manager-brand-sub {
+  color: #896E61;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  padding: 0 0.75rem;
+  margin-bottom: 2rem;
+}
+
+/* Sidebar navigation */
+.manager .manager-tab {
+  background: transparent;
+  color: #58392F;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.manager .manager-tab:hover {
+  background: #FFF8F1;
+  border-color: #E9CFC3;
+}
+
+.manager .manager-tab-active,
+.manager .manager-tab-active:hover {
+  background: #F8DCD8;
+  border-color: #B98272;
+  color: #58392F;
+  box-shadow: 3px 3px 0 #E7B7A8;
+}
+
+/* Main content */
+.manager .manager-main {
+  padding: 2.5rem 3rem;
+  gap: 1.75rem;
+}
+
+.manager .manager-main h1 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 2.6rem;
+  font-weight: 400;
+  color: #98634B;
+}
+
+/* Summary statistic cards */
+.manager .stat {
+  background: #FFFDF9;
+  border: 2px solid #E9CFC3;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.manager .stat-label {
+  color: #896E61;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.manager .stat-value {
+  color: #58392F;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+/* Overview panels */
+.manager .panel {
+  background: #FFFDF9;
+  border: 2px solid #E9CFC3;
+  border-radius: 22px;
+  padding: 1.75rem;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.manager .panel h2 {
+  color: #58392F;
+  font-size: 1.5rem;
+}
+
+/* Top drinks chart */
+.manager .bar-track {
+  background: #FBE7E2;
+  border-radius: 999px;
+}
+
+.manager .bar-fill {
+  background: #D9968E;
+  border-radius: 999px;
+}
+
+/* Forms */
+.manager .inline-form,
+.manager .order-filters {
+  background: #FFFDF9;
+  border: 2px solid #E9CFC3;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.manager .inline-form h2 {
+  font-size: 1.5rem;
+  color: #58392F;
+}
+
+.manager .inline-form input,
+.manager .inline-form select,
+.manager .order-filters input,
+.manager .order-filters select,
+.manager .cell-input,
+.manager .cell-select {
+  background: #FFFFFF;
+  color: #58392F;
+  border: 2px solid #E9CFC3;
+  border-radius: 10px;
+}
+
+/* Buttons */
+.manager .btn {
+  background: #FFF0DE;
+  color: #58392F;
+  border: 2px solid #B98272;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.manager .btn:hover:not(:disabled) {
+  background: #F8DCD8;
+  transform: translateY(-2px);
+}
+
+.manager .btn-primary {
+  background: #98634B;
+  color: #FFFFFF;
+  border-color: #98634B;
+}
+
+.manager .btn-primary:hover:not(:disabled) {
+  background: #754A38;
+}
+
+/* Tables */
+.manager .table-wrap {
+  background: #FFFDF9;
+  border: 2px solid #E9CFC3;
+  border-radius: 20px;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.manager .data-table th {
+  background: #F8DCD8;
+  color: #58392F;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.manager .data-table td {
+  color: #58392F;
+}
+
+.manager .data-table tbody tr:hover {
+  background: #FFF8F1;
+}
+
+/* Responsive layout */
+@media (max-width: 850px) {
+  .manager {
+    grid-template-columns: 1fr;
+  }
+
+  .manager .manager-nav {
+    border-right: none;
+    border-bottom: 2px solid #E9CFC3;
+    padding: 1.25rem;
+  }
+
+  .manager .manager-main {
+    padding: 1.5rem;
+  }
+}

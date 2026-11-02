@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, MENU_KEYS } from "../data/menu.js";
-import { getAllOrders, ORDER_KEYS } from "../data/orders.js";
+import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS } from "../data/inventory.js";
 import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
 import { useLive, money } from "../data/store.js";
 
-const TABS = ["Overview", "Orders", "Menu", "Inventory", "Employees"];
+const TABS = ["Overview", "Reports", "Orders", "Menu", "Inventory", "Employees"];
 
 export default function ManagerDashboard() {
   const [tab, setTab] = useState("Overview");
@@ -29,6 +29,7 @@ export default function ManagerDashboard() {
       <main className="manager-main">
         <h1>{tab}</h1>
         {tab === "Overview" && <Overview />}
+        {tab === "Reports" && <Reports />}
         {tab === "Orders" && <Orders />}
         {tab === "Menu" && <MenuTab />}
         {tab === "Inventory" && <InventoryTab />}
@@ -113,6 +114,300 @@ function Stat({ label, value }) {
       <span className="stat-label">{label}</span>
       <span className="stat-value">{value}</span>
     </div>
+  );
+}
+
+
+/* ---------------- Reports ---------------- */
+
+function localDateKey(timestamp) {
+  const d = new Date(timestamp);
+  if (Number.isNaN(d.getTime())) return "";
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function Reports() {
+  const orders = useLive(getAllOrders, ORDER_KEYS);
+  const inventory = useLive(getInventory, INVENTORY_KEYS);
+  const [date, setDate] = useState(() => localDateKey(Date.now()));
+
+  // Orders placed on the selected date
+  const dailyOrders = orders.filter(
+    (o) => localDateKey(o.placedAt) === date
+  );
+
+  // Daily sales calculations
+  const revenue = dailyOrders.reduce(
+    (sum, o) => sum + (Number(o.total) || 0), 0
+  );
+
+  const subtotal = dailyOrders.reduce(
+    (sum, o) => sum + (Number(o.subtotal) || 0), 0
+  );
+
+  const tax = dailyOrders.reduce(
+    (sum, o) => sum + (Number(o.tax) || 0), 0
+  );
+
+  const itemsSold = dailyOrders.reduce(
+    (sum, o) =>
+      sum + o.items.reduce(
+        (n, i) => n + (Number(i.quantity) || 0), 0
+      ),
+    0
+  );
+
+  const kioskOrders = dailyOrders.filter(
+    (o) => o.source === "Kiosk"
+  );
+
+  const cashierOrders = dailyOrders.filter(
+    (o) => o.source === "Cashier"
+  );
+
+  // Product sales calculations
+  const products = new Map();
+
+  dailyOrders.forEach((order) => {
+    order.items.forEach((item) => {
+      const key = item.name;
+
+      const previous = products.get(key) || {
+        name: key,
+        quantity: 0,
+        revenue: 0,
+      };
+
+      previous.quantity += Number(item.quantity) || 0;
+      previous.revenue += itemPrice(item);
+
+      products.set(key, previous);
+    });
+  });
+
+  const productRows = [...products.values()].sort(
+    (a, b) =>
+      b.quantity - a.quantity ||
+      a.name.localeCompare(b.name)
+  );
+
+  const maxQuantity = Math.max(
+    1,
+    ...productRows.map((p) => p.quantity)
+  );
+
+  const lowStock = inventory.filter(isLowStock);
+
+  return (
+    <>
+      {/* Date selector */}
+      <div className="order-filters">
+        <label>
+          Report date
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </label>
+
+        <button
+          type="button"
+          className="btn"
+          onClick={() => setDate(localDateKey(Date.now()))}
+        >
+          Today
+        </button>
+      </div>
+
+      {/* Daily sales report */}
+      <section aria-label="Daily sales report">
+        <h2>Daily sales report</h2>
+
+        <div className="stat-row">
+          <Stat
+            label="Revenue (including tax)"
+            value={money(revenue)}
+          />
+          <Stat
+            label="Orders"
+            value={dailyOrders.length}
+          />
+          <Stat
+            label="Items sold"
+            value={itemsSold}
+          />
+          <Stat
+            label="Average order"
+            value={money(
+              dailyOrders.length
+                ? revenue / dailyOrders.length
+                : 0
+            )}
+          />
+        </div>
+
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th className="num">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Subtotal before tax</td>
+                <td className="num">{money(subtotal)}</td>
+              </tr>
+              <tr>
+                <td>Tax collected</td>
+                <td className="num">{money(tax)}</td>
+              </tr>
+              <tr>
+                <td>Total revenue</td>
+                <td className="num">{money(revenue)}</td>
+              </tr>
+              <tr>
+                <td>Kiosk orders</td>
+                <td className="num">{kioskOrders.length}</td>
+              </tr>
+              <tr>
+                <td>Cashier orders</td>
+                <td className="num">{cashierOrders.length}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Product sales report */}
+      <section
+        className="panel"
+        aria-label="Product sales report"
+      >
+        <h2>Product sales report</h2>
+
+        {productRows.length === 0 ? (
+          <p className="muted">
+            No orders recorded for this date.
+          </p>
+        ) : (
+          <>
+            <h3>Drinks sold by quantity</h3>
+
+            <ul className="bar-list">
+              {productRows.slice(0, 10).map((p) => (
+                <li key={p.name}>
+                  <span className="bar-label">
+                    {p.name}
+                  </span>
+
+                  <span className="bar-track">
+                    <span
+                      className="bar-fill"
+                      style={{
+                        width: `${
+                          (p.quantity / maxQuantity) * 100
+                        }%`,
+                      }}
+                    />
+                  </span>
+
+                  <span className="bar-value">
+                    {p.quantity}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Drink</th>
+                    <th className="num">Quantity sold</th>
+                    <th className="num">Sales before tax</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {productRows.map((p) => (
+                    <tr key={p.name}>
+                      <td>{p.name}</td>
+                      <td className="num">
+                        {p.quantity}
+                      </td>
+                      <td className="num">
+                        {money(p.revenue)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Inventory status report */}
+      <section
+        className="panel"
+        aria-label="Inventory status report"
+      >
+        <h2>Inventory status report</h2>
+
+        <p className="muted">
+          Current inventory snapshot, not historical
+          usage for the selected date.
+        </p>
+
+        <p>
+          {lowStock.length} of {inventory.length} inventory
+          items are below minimum.
+        </p>
+
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Ingredient / supply</th>
+                <th className="num">In stock</th>
+                <th className="num">Minimum</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {inventory.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.name}</td>
+                  <td className="num">
+                    {item.quantity} {item.unit}
+                  </td>
+                  <td className="num">
+                    {item.minimum} {item.unit}
+                  </td>
+                  <td>
+                    {isLowStock(item) ? "Low stock" : "OK"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <p className="muted">
+        Reports reflect orders saved in this browser
+        until the shared database is connected.
+      </p>
+    </>
   );
 }
 

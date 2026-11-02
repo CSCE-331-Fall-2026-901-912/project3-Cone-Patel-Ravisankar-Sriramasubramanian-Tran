@@ -838,3 +838,26 @@ h1, h2, .hub-card-title {
 .manager .panel-row {
   gap: 1rem;
 }
+
+/* Manager Reports spacing */
+.manager .stat-row + .table-wrap {
+  margin-top: 1.25rem;
+}
+
+.manager .stat-row + .table-wrap .data-table {
+  margin-top: 0;
+}
+
+/* Space between report titles and content */
+.manager section[aria-label="Daily sales report"] > h2 {
+  margin-bottom: 0.75rem;
+}
+
+/* Spacing between product sales chart and table */
+.manager section[aria-label="Product sales report"] .bar-list {
+  margin-bottom: 1.5rem;
+}
+
+.manager section[aria-label="Product sales report"] h3 {
+  margin-bottom: 1rem;
+}

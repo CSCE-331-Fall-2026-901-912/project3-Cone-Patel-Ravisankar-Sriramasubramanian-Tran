@@ -3,9 +3,6 @@ import { getActiveOrders, getRecentlyReady, getCompletedOrders, updateStatus, OR
 import { useLive } from "../data/store.js";
 import KitchenHistory from "../components/KitchenHistory.jsx";
 
-// Active tab: every order that still needs to be made, oldest first.
-// Staff tap "Start" when they begin a ticket and "Mark Ready" when it's done.
-// History tab: completed orders with timestamps and details.
 export default function KitchenDisplay() {
   const orders = useLive(getActiveOrders, ORDER_KEYS);
   const ready = useLive(getRecentlyReady, ORDER_KEYS);
@@ -14,7 +11,6 @@ export default function KitchenDisplay() {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    // Tick every second so the wait timers stay current.
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -80,7 +76,6 @@ function Ticket({ order, now }) {
   const seconds = Math.max(0, Math.floor((now - order.placedAt) / 1000));
   const minutes = Math.floor(seconds / 60);
   const waitText = `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
-  // Color the timer so slow tickets stand out: yellow after 5 min, red after 10.
   const urgency = minutes >= 10 ? "late" : minutes >= 5 ? "warn" : "ok";
   const inProgress = order.status === "in-progress";
 

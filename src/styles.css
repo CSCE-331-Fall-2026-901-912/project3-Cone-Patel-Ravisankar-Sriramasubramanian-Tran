@@ -525,3 +525,58 @@ h1, h2, .hub-card-title {
     width: 100%;
   }
 }
+
+
+/* Manager Inventory search and filtering */
+
+.inventory-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.inventory-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.inventory-filters input[type="search"] {
+  min-width: 220px;
+  min-height: 42px;
+  padding: 0.5rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.inventory-filters .inventory-low-stock-toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.inventory-low-stock-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 600px) {
+  .inventory-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventory-filters input[type="search"] {
+    min-width: 0;
+    width: 100%;
+  }
+}

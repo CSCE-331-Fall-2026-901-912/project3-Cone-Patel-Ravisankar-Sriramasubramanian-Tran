@@ -81,11 +81,11 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
           <p className="muted" role="status">
             {query && visibleMenu.length === 0 ? `No drinks match "${search.trim()}".` : ""}
           </p>
-          {CATEGORIES.filter((c) => menu.some((d) => d.category === c)).map((c) => (
+          {CATEGORIES.filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
             <div key={c} className="cashier-category">
               <h2>{c}</h2>
               <div className="cashier-grid">
-                {menu
+                {visibleMenu
                   .filter((d) => d.category === c)
                   .map((drink) => (
                     <button key={drink.id} className="cashier-item" onClick={() => setCustomizing(drink)}>

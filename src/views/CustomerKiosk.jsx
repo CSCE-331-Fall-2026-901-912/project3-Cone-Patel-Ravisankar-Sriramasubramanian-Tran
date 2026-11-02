@@ -3,6 +3,7 @@ import { SHOP_NAME, CATEGORIES, getActiveMenu, MENU_KEYS } from "../data/menu.js
 import { placeOrder, itemPrice, orderTotals } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
+import OrderReview from "../components/OrderReview.jsx";
 
 export default function CustomerKiosk() {
   const menu = useLive(getActiveMenu, MENU_KEYS);
@@ -10,6 +11,7 @@ export default function CustomerKiosk() {
   const [category, setCategory] = useState(categories[0]);
   const [customizing, setCustomizing] = useState(null); // drink being customized
   const [cart, setCart] = useState([]);
+  const [reviewing, setReviewing] = useState(false); // showing the order review step
   const [confirmation, setConfirmation] = useState(null); // placed order number
 
   const { subtotal, tax, total } = orderTotals(cart);
@@ -19,10 +21,32 @@ export default function CustomerKiosk() {
     setCustomizing(null);
   }
 
+  function changeQuantity(cartId, quantity) {
+    if (quantity < 1) return;
+    setCart(cart.map((i) => (i.cartId === cartId ? { ...i, quantity } : i)));
+  }
+
+  function removeFromCart(cartId) {
+    setCart(cart.filter((i) => i.cartId !== cartId));
+  }
+
   function checkout() {
     const order = placeOrder(cart, { source: "Kiosk" });
     setCart([]);
+    setReviewing(false);
     setConfirmation(order.number);
+  }
+
+  if (reviewing) {
+    return (
+      <OrderReview
+        cart={cart}
+        onChangeQuantity={changeQuantity}
+        onRemove={removeFromCart}
+        onBack={() => setReviewing(false)}
+        onConfirm={checkout}
+      />
+    );
   }
 
   if (confirmation) {
@@ -89,7 +113,7 @@ export default function CustomerKiosk() {
                     <span>{money(itemPrice(item))}</span>
                     <button
                       className="btn-link"
-                      onClick={() => setCart(cart.filter((i) => i.cartId !== item.cartId))}
+                      onClick={() => removeFromCart(item.cartId)}
                       aria-label={`Remove ${item.name}`}
                     >
                       Remove
@@ -107,8 +131,8 @@ export default function CustomerKiosk() {
             <span>Total</span>
             <span>{money(total)}</span>
           </div>
-          <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={checkout}>
-            Place Order
+          <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => setReviewing(true)}>
+            Review Order
           </button>
         </aside>
       </div>

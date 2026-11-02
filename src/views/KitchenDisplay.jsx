@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { getActiveOrders, getRecentlyReady, updateStatus, ORDER_KEYS } from "../data/orders.js";
+import { getActiveOrders, getRecentlyReady, getCompletedOrders, updateStatus, ORDER_KEYS } from "../data/orders.js";
 import { useLive } from "../data/store.js";
+import KitchenHistory from "../components/KitchenHistory.jsx";
 
-// Shows every order that still needs to be made, oldest first.
+// Active tab: every order that still needs to be made, oldest first.
 // Staff tap "Start" when they begin a ticket and "Mark Ready" when it's done.
+// History tab: completed orders with timestamps and details.
 export default function KitchenDisplay() {
   const orders = useLive(getActiveOrders, ORDER_KEYS);
   const ready = useLive(getRecentlyReady, ORDER_KEYS);
+  const completedCount = useLive(getCompletedOrders, ORDER_KEYS).length;
+  const [tab, setTab] = useState("active"); // "active" or "history"
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -24,7 +28,28 @@ export default function KitchenDisplay() {
         </p>
       </header>
 
-      {orders.length === 0 ? (
+      <nav className="kitchen-tabs" aria-label="Kitchen views">
+        <button
+          className={`kitchen-tab ${tab === "active" ? "kitchen-tab-active" : ""}`}
+          aria-pressed={tab === "active"}
+          onClick={() => setTab("active")}
+        >
+          Active
+          <span className="kitchen-tab-count">{orders.length}</span>
+        </button>
+        <button
+          className={`kitchen-tab ${tab === "history" ? "kitchen-tab-active" : ""}`}
+          aria-pressed={tab === "history"}
+          onClick={() => setTab("history")}
+        >
+          History
+          <span className="kitchen-tab-count">{completedCount}</span>
+        </button>
+      </nav>
+
+      {tab === "history" ? (
+        <KitchenHistory />
+      ) : orders.length === 0 ? (
         <p className="kitchen-empty">No orders right now. New orders from the kiosk and cashier appear here automatically.</p>
       ) : (
         <section className="ticket-grid" aria-label="Open orders" aria-live="polite">
@@ -34,7 +59,7 @@ export default function KitchenDisplay() {
         </section>
       )}
 
-      {ready.length > 0 && (
+      {tab === "active" && ready.length > 0 && (
         <footer className="ready-bar" aria-label="Recently completed">
           <span>Recently ready:</span>
           {ready.map((o) => (
@@ -58,14 +83,6 @@ function Ticket({ order, now }) {
   // Color the timer so slow tickets stand out: yellow after 5 min, red after 10.
   const urgency = minutes >= 10 ? "late" : minutes >= 5 ? "warn" : "ok";
   const inProgress = order.status === "in-progress";
-  
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
-  function confirmReady() {
-    updateStatus(order.number, "ready");
-    setShowConfirmation(false);
-  }
-
 
   return (
     <article className={`ticket ${inProgress ? "ticket-progress" : ""}`}>
@@ -97,12 +114,8 @@ function Ticket({ order, now }) {
         ))}
       </ul>
 
-      
       {inProgress ? (
-        <button
-          className="btn btn-success btn-block"
-          onClick={() => setShowConfirmation(true)}
-        >
+        <button className="btn btn-success btn-block" onClick={() => updateStatus(order.number, "ready")}>
           Mark Ready
         </button>
       ) : (
@@ -110,50 +123,6 @@ function Ticket({ order, now }) {
           Start
         </button>
       )}
-      
-      {showConfirmation && (
-        <div
-          className="kitchen-confirm-overlay"
-          role="presentation"
-          onClick={() => setShowConfirmation(false)}
-        >
-          <div
-            className="kitchen-confirm-dialog"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby={`confirm-ready-${order.number}`}
-            aria-describedby={`confirm-ready-description-${order.number}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id={`confirm-ready-${order.number}`}>
-              Complete Order #{order.number}?
-            </h2>
-
-            <p id={`confirm-ready-description-${order.number}`}>
-              Are you sure this order is finished and ready for pickup?
-            </p>
-
-            <div className="kitchen-confirm-actions">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => setShowConfirmation(false)}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-success"
-                onClick={confirmReady}
-              >
-                Confirm Complete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </article>
   );
 }

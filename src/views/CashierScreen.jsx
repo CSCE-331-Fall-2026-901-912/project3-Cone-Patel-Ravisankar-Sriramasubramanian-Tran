@@ -25,8 +25,12 @@ export default function CashierScreen() {
     setCustomizing(null);
   }
 
-  function duplicate(item) {
-    setCart([...cart, { ...item, cartId: crypto.randomUUID() }]);
+  function changeQuantity(cartId, amount) {
+    setCart((current) => current
+      .map((item) => item.cartId === cartId
+        ? { ...item, quantity: item.quantity + amount }
+        : item)
+      .filter((item) => item.quantity > 0));
   }
 
   function charge(payment) {
@@ -97,9 +101,11 @@ export default function CashierScreen() {
                   <div className="cart-item-right">
                     <span>{money(itemPrice(item))}</span>
                     <span>
-                      <button className="btn-link" onClick={() => duplicate(item)} aria-label={`Add another ${item.name}`}>
-                        Repeat
-                      </button>
+                      <span className="cart-quantity-controls" aria-label={`Quantity for ${item.name}`}>
+                        <button type="button" className="btn qty-btn" onClick={() => changeQuantity(item.cartId, -1)} aria-label={`Decrease ${item.name} quantity`}>−</button>
+                        <span className="qty" aria-live="polite">{item.quantity}</span>
+                        <button type="button" className="btn qty-btn" onClick={() => changeQuantity(item.cartId, 1)} aria-label={`Increase ${item.name} quantity`}>+</button>
+                      </span>
                       <button
                         className="btn-link"
                         onClick={() => setCart(cart.filter((i) => i.cartId !== item.cartId))}

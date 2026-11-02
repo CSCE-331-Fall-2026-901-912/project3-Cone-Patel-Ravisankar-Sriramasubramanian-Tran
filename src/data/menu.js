@@ -1,7 +1,7 @@
 // Menu data. Future: GET/POST/PATCH /api/menu backed by the menu table.
 import { load, save } from "./store.js";
 
-export const SHOP_NAME = "Boba Shop"; // TODO: swap in our team's imaginary vendor name
+export const SHOP_NAME = "Boba Bliss"; // TODO: swap in our team's imaginary vendor name
 
 export const CATEGORIES = ["Milk Tea", "Fruit Tea", "Specialty", "Seasonal"];
 

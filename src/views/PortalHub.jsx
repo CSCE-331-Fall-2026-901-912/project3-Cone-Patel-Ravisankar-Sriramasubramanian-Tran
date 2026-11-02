@@ -13,7 +13,16 @@ const VIEWS = [
 export default function PortalHub() {
   return (
     <main className="hub">
-      <h1>{SHOP_NAME} Portal</h1>
+      <div className="hub-heading">
+      
+
+      <p className="hub-eyebrow">WELCOME TO</p>
+      <h1>{SHOP_NAME}</h1>
+      <p className="hub-tagline">The best boba heaven in College Station</p>
+      <p className="hub-team">by Squad 33 - The Actors</p>
+      <span className="hub-sparkle">✳</span>
+      
+    </div>
       <p className="hub-sub">Choose a view to open.</p>
       <nav aria-label="Interface views">
         <ul className="hub-grid">
@@ -27,6 +36,9 @@ export default function PortalHub() {
           ))}
         </ul>
       </nav>
+      <div className="hub-footer-decoration" aria-hidden="true">
+        ✿ ───── ✦ ───── ✿
+      </div>
     </main>
   );
 }

@@ -58,6 +58,14 @@ function Ticket({ order, now }) {
   // Color the timer so slow tickets stand out: yellow after 5 min, red after 10.
   const urgency = minutes >= 10 ? "late" : minutes >= 5 ? "warn" : "ok";
   const inProgress = order.status === "in-progress";
+  
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  function confirmReady() {
+    updateStatus(order.number, "ready");
+    setShowConfirmation(false);
+  }
+
 
   return (
     <article className={`ticket ${inProgress ? "ticket-progress" : ""}`}>
@@ -89,8 +97,12 @@ function Ticket({ order, now }) {
         ))}
       </ul>
 
+      
       {inProgress ? (
-        <button className="btn btn-success btn-block" onClick={() => updateStatus(order.number, "ready")}>
+        <button
+          className="btn btn-success btn-block"
+          onClick={() => setShowConfirmation(true)}
+        >
           Mark Ready
         </button>
       ) : (
@@ -98,6 +110,50 @@ function Ticket({ order, now }) {
           Start
         </button>
       )}
+      
+      {showConfirmation && (
+        <div
+          className="kitchen-confirm-overlay"
+          role="presentation"
+          onClick={() => setShowConfirmation(false)}
+        >
+          <div
+            className="kitchen-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby={`confirm-ready-${order.number}`}
+            aria-describedby={`confirm-ready-description-${order.number}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id={`confirm-ready-${order.number}`}>
+              Complete Order #{order.number}?
+            </h2>
+
+            <p id={`confirm-ready-description-${order.number}`}>
+              Are you sure this order is finished and ready for pickup?
+            </p>
+
+            <div className="kitchen-confirm-actions">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setShowConfirmation(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-success"
+                onClick={confirmReady}
+              >
+                Confirm Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </article>
   );
 }

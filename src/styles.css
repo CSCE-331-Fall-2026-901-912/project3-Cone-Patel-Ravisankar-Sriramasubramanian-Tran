@@ -1,17 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
 :root {
-  --bg: #fbf7f2;
-  --surface: #ffffff;
-  --text: #2b2118;
-  --muted: #6b5d50;
-  --border: #e4d9cc;
-  --primary: #7a4b2a;      /* brown sugar */
-  --primary-text: #ffffff;
-  --accent: #f3e6d6;
-  --success: #2f7d4f;
-  --warn: #b7791f;
-  --late: #c0392b;
-  --focus: #1d4ed8;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bg: #FFF8F1;           /* Vanilla cream */
+  --surface: #FFFFFF;
+  --text: #58392F;         /* Dark cocoa */
+  --muted: #896E61;
+  --border: #E9CFC3;
+  --primary: #98634B;      /* Milk chocolate */
+  --primary-text: #FFFFFF;
+  --accent: #F6D3D1;       /* Strawberry pink */
+  --success: #487A59;
+  --warn: #B7791F;
+  --late: #C0392B;
+  --focus: #1D4ED8;
+
+  font-family: "DM Sans", sans-serif;
   color: var(--text);
   background: var(--bg);
 }
@@ -45,12 +48,39 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .hub { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem; }
 .hub h1 { font-size: 2.2rem; }
 .hub-sub { color: var(--muted); margin-bottom: 2rem; }
-.hub-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.hub-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+.hub-grid {
+  list-style: none;
+  padding: 0;
+  margin: 2rem auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  max-width: 900px;
+}
 .hub-card {
-  display: flex; flex-direction: column; gap: 0.4rem;
-  padding: 1.5rem; min-height: 130px;
-  background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
-  color: var(--text); text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  padding: 1rem;
+
+  background: #FBE7E2;
+  border: 2px solid #E9CFC3;
+  border-radius: 20px;
+  color: var(--text);
+  text-decoration: none;
 }
 .hub-card:hover { border-color: var(--primary); }
 .hub-card-title { font-size: 1.25rem; font-weight: 700; }
@@ -209,3 +239,238 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .status-low { background: #f9dedb; color: var(--late); }
 .inline-form label { flex: 0 1 220px; }
 .inline-form input[type="number"] { width: 120px; }
+
+/* boba bliss design */
+
+h1, h2, .hub-card-title {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
+}
+
+.hub {
+  text-align: center;
+  padding-top: 5rem;
+}
+
+.hub h1 {
+  font-size: clamp(3rem, 6vw, 5rem);
+  color: var(--primary);
+}
+
+.hub-card {
+  background: #FBE7E2;
+  border-color: #E9CFC3;
+  border-radius: 22px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hub-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px #58392F18;
+}
+
+.kiosk-header {
+  background: #F6D3D1;
+  color: #58392F;
+  text-align: center;
+  padding: 2rem;
+}
+
+.kiosk-header h1 {
+  font-size: 3rem;
+}
+
+.tab {
+  border-radius: 999px;
+  background: #FFF8F1;
+}
+
+.tab-active {
+  background: #98634B;
+  color: white;
+}
+
+.drink-card {
+  background: #FFFDF9;
+  border-radius: 22px;
+  border-color: #E9CFC3;
+}
+
+.drink-card:hover {
+  background: #FBE7E2;
+}
+
+.cart {
+  background: #FBE7E2;
+  border-radius: 22px;
+}
+
+.btn-primary {
+  background: #98634B;
+  border-color: #98634B;
+  color: white;
+  border-radius: 999px;
+}
+
+.manager-nav {
+  background: #58392F;
+}
+
+.manager-tab-active {
+  background: #98634B;
+}
+
+.cashier-header {
+  background: #98634B;
+}
+
+.panel, .stat {
+  border-radius: 18px;
+  background: #FFFDF9;
+}
+
+.kitchen {
+  background: #35251F;
+}
+
+.ticket {
+  border-radius: 18px;
+}
+
+
+/* ---------- Boba Bliss decorative Portal Hub ---------- */
+
+.hub {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.hub-heading {
+  position: relative;
+  margin-bottom: 3rem;
+}
+
+.hub-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: #98634B;
+}
+
+.hub-heading h1 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  color: #98634B;
+  line-height: 1.1;
+  margin: 0.5rem 0;
+}
+
+.hub-tagline {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: #A56E60;
+}
+
+.hub-team {
+  font-size: 0.85rem;
+  color: #896E61;
+  letter-spacing: 0.08em;
+}
+
+.hub-team-inline {
+  display: block;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.hub-sparkle {
+  position: absolute;
+  top: 25%;
+  font-size: 2.5rem;
+  color: #D9968E;
+}
+
+.hub-sparkle:first-child {
+  left: 12%;
+}
+
+.hub-sparkle:last-child {
+  right: 12%;
+}
+
+/* Four equal cards in one row */
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.hub-card {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  min-height: 0;
+  padding: 1rem;
+  border: 2px solid #B98272;
+  border-radius: 24px;
+  background: #F8DCD8;
+  box-shadow: 5px 5px 0 #E7B7A8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  gap: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hub-grid li:nth-child(even) .hub-card {
+  background: #FFF0DE;
+  box-shadow: 5px 5px 0 #D9BDA7;
+}
+
+.hub-card::before {
+  content: "✿";
+  font-size: 1.8rem;
+  color: #B87E6C;
+}
+
+.hub-card-title {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 1.4rem;
+  color: #58392F;
+}
+
+.hub-card-desc {
+  font-size: 0.8rem;
+  color: #896E61;
+}
+
+.hub-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 5px 9px 0 #C98F81;
+}
+
+@media (max-width: 650px) {
+  .hub-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hub-sparkle {
+    display: none;
+  }
+}
+
+.hub-footer-decoration {
+  margin-top: 3rem;
+  color: #C78D7B;
+  font-size: 1.4rem;
+  letter-spacing: 0.4rem;
+}

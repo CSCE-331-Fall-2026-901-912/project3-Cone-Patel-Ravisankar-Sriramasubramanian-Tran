@@ -342,6 +342,11 @@ function MenuTab() {
 
 function InventoryTab() {
   const inventory = useLive(getInventory, INVENTORY_KEYS);
+  
+  // Inventory search and low-stock filtering.
+  const [search, setSearch] = useState("");
+  const [showLowStockOnly, setShowLowStockOnly] = useState(false);
+
   const [form, setForm] = useState({ name: "", unit: "", quantity: "", minimum: "" });
 
   function submit(e) {
@@ -353,8 +358,29 @@ function InventoryTab() {
     setForm({ name: "", unit: "", quantity: "", minimum: "" });
   }
 
-  // Low-stock items first so they're the first thing a manager sees.
-  const sorted = [...inventory].sort((a, b) => isLowStock(b) - isLowStock(a));
+  
+  // Search by item name and optionally show only low-stock items.
+  const filteredInventory = inventory.filter((item) => {
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(search.trim().toLowerCase());
+
+    const matchesLowStock =
+      !showLowStockOnly || isLowStock(item);
+
+    return matchesSearch && matchesLowStock;
+  });
+
+  // Keep low-stock items at the top of the filtered results.
+  const sorted = [...filteredInventory].sort(
+    (a, b) => Number(isLowStock(b)) - Number(isLowStock(a))
+  );
+
+  function clearInventoryFilters() {
+    setSearch("");
+    setShowLowStockOnly(false);
+  }
+
 
   return (
     <>
@@ -378,6 +404,48 @@ function InventoryTab() {
         </label>
         <button className="btn btn-primary">Add</button>
       </form>
+      
+      <div className="inventory-filters">
+        <label>
+          Search inventory
+          <input
+            type="search"
+            placeholder="Search by item name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+
+        <label className="inventory-low-stock-toggle">
+          <input
+            type="checkbox"
+            checked={showLowStockOnly}
+            onChange={(e) => setShowLowStockOnly(e.target.checked)}
+          />
+          Show low-stock items only
+        </label>
+
+        <button
+          type="button"
+          className="btn"
+          onClick={clearInventoryFilters}
+          disabled={!search && !showLowStockOnly}
+        >
+          Clear filters
+        </button>
+      </div>
+
+      <p className="muted" role="status">
+        Showing {sorted.length} of {inventory.length} inventory items
+      </p>
+
+      {sorted.length === 0 && (
+        <p className="muted">
+          {inventory.length === 0
+            ? "No inventory items yet."
+            : "No inventory items match your filters."}
+        </p>
+      )}
 
       <div className="table-wrap">
         <table className="data-table">

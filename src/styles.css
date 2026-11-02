@@ -474,3 +474,54 @@ h1, h2, .hub-card-title {
   font-size: 1.4rem;
   letter-spacing: 0.4rem;
 }
+
+
+/* Manager Orders search and filtering */
+
+.order-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+}
+
+.order-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.order-filters input,
+.order-filters select {
+  min-height: 42px;
+  padding: 0.5rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  background: white;
+}
+
+.order-filters input {
+  min-width: 240px;
+}
+
+.order-filters button {
+  min-height: 42px;
+}
+
+@media (max-width: 600px) {
+  .order-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .order-filters input {
+    min-width: 0;
+    width: 100%;
+  }
+}

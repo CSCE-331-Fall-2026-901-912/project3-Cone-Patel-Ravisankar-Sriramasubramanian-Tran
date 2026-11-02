@@ -118,46 +118,144 @@ function Stat({ label, value }) {
 
 /* ---------------- Orders ---------------- */
 
+
 function Orders() {
   const orders = [...useLive(getAllOrders, ORDER_KEYS)].reverse();
 
-  if (orders.length === 0) return <p className="muted">No orders yet. Place one from the kiosk or cashier.</p>;
+  // Keep track of the manager's search and filter selections.
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const searchTerm = search.trim().toLowerCase();
+
+  // Only display orders that match both filters.
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      String(order.number).includes(searchTerm.replace(/^#/, "")) ||
+      (order.employee ?? "").toLowerCase().includes(searchTerm) ||
+      order.items.some((item) =>
+        item.name.toLowerCase().includes(searchTerm)
+      );
+
+    const matchesStatus =
+      statusFilter === "all" || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+  }
+
+  if (orders.length === 0) {
+    return (
+      <p className="muted">
+        No orders yet. Place one from the kiosk or cashier.
+      </p>
+    );
+  }
 
   return (
-    <div className="table-wrap">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Order</th>
-            <th>Time</th>
-            <th>Source</th>
-            <th>Employee</th>
-            <th>Items</th>
-            <th>Payment</th>
-            <th className="num">Total</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((o) => (
-            <tr key={o.number}>
-              <td>#{o.number}</td>
-              <td>{new Date(o.placedAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
-              <td>{o.source}</td>
-              <td>{o.employee ?? "—"}</td>
-              <td>{o.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}</td>
-              <td>{o.payment}</td>
-              <td className="num">{money(o.total)}</td>
-              <td>
-                <span className={`status status-${o.status}`}>{o.status === "in-progress" ? "In progress" : o.status === "ready" ? "Ready" : "New"}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="order-filters">
+        <label>
+          Search orders
+          <input
+            type="search"
+            placeholder="Order #, drink, or employee"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+
+        <label>
+          Order status
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All statuses</option>
+            <option value="new">New</option>
+            <option value="in-progress">In progress</option>
+            <option value="ready">Ready</option>
+          </select>
+        </label>
+
+        <button
+          type="button"
+          className="btn"
+          onClick={clearFilters}
+          disabled={!search && statusFilter === "all"}
+        >
+          Clear filters
+        </button>
+      </div>
+
+      <p className="muted" role="status">
+        Showing {filteredOrders.length} of {orders.length} orders
+      </p>
+
+      {filteredOrders.length === 0 ? (
+        <p className="muted">
+          No orders match your search or filters.
+        </p>
+      ) : (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Time</th>
+                <th>Source</th>
+                <th>Employee</th>
+                <th>Items</th>
+                <th>Payment</th>
+                <th className="num">Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredOrders.map((o) => (
+                <tr key={o.number}>
+                  <td>#{o.number}</td>
+                  <td>
+                    {new Date(o.placedAt).toLocaleString([], {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td>{o.source}</td>
+                  <td>{o.employee ?? "—"}</td>
+                  <td>
+                    {o.items
+                      .map((i) => `${i.quantity}× ${i.name}`)
+                      .join(", ")}
+                  </td>
+                  <td>{o.payment}</td>
+                  <td className="num">{money(o.total)}</td>
+                  <td>
+                    <span className={`status status-${o.status}`}>
+                      {o.status === "in-progress"
+                        ? "In progress"
+                        : o.status === "ready"
+                          ? "Ready"
+                          : "New"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
   );
 }
+
 
 /* ---------------- Menu ---------------- */
 

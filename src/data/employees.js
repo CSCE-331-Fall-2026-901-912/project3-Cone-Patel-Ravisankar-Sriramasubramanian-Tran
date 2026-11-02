@@ -3,7 +3,7 @@ import { load, save } from "./store.js";
 
 const KEY = "pos_employees";
 export const EMPLOYEE_KEYS = [KEY];
-export const ROLES = ["Cashier", "Manager"];
+export const ROLES = ["Cashier", "Manager", "Kitchen"];
 
 const DEFAULT_EMPLOYEES = [
   { id: 1, name: "Alex Kim", role: "Manager", active: true },

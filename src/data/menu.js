@@ -33,12 +33,17 @@ export function getActiveMenu() {
 
 export function addMenuItem({ name, category, price }) {
   const menu = getMenu();
-  const id = Math.max(0, ...menu.map((d) => d.id)) + 1;
+  const id = crypto.randomUUID();
   save(MENU_KEY, [...menu, { id, name, category, price, active: true }]);
 }
 
 export function updateMenuItem(id, changes) {
   save(MENU_KEY, getMenu().map((d) => (d.id === id ? { ...d, ...changes } : d)));
+}
+
+// Delete a menu item by ID
+export function deleteMenuItem(id) {
+  save(MENU_KEY, getMenu().filter((d) => d.id !== id));
 }
 
 export const SIZES = [

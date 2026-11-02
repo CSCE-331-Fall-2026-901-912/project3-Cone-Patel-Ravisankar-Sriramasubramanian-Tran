@@ -558,6 +558,13 @@ function MenuTab() {
   const menu = useLive(getMenu, MENU_KEYS);
   const [form, setForm] = useState({ name: "", category: "Seasonal", price: "" });
 
+  const [search, setSearch] = useState("");
+
+  const filteredMenu = menu.filter((drink) =>
+    drink.name.toLowerCase().includes(search.trim().toLowerCase()) ||
+    drink.category.toLowerCase().includes(search.trim().toLowerCase())
+  );
+
   function submit(e) {
     e.preventDefault();
     const price = parseFloat(form.price);
@@ -588,7 +595,30 @@ function MenuTab() {
         </label>
         <button className="btn btn-primary">Add</button>
       </form>
+      <div className="order-filters">
+        <label>
+          Search menu
+          <input
+            type="search"
+            placeholder="Search by drink or category"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
 
+        <button
+          type="button"
+          className="btn"
+          onClick={() => setSearch("")}
+          disabled={!search}
+        >
+          Clear search
+        </button>
+      </div>
+
+      <p className="muted" role="status">
+        Showing {filteredMenu.length} of {menu.length} drinks
+      </p>
       <div className="table-wrap">
         <table className="data-table">
           <thead>
@@ -600,7 +630,7 @@ function MenuTab() {
             </tr>
           </thead>
           <tbody>
-            {menu.map((d) => (
+            {filteredMenu.map((d) => (
               <tr key={d.id} className={d.active ? "" : "row-off"}>
                 <td>{d.name}</td>
                 <td>{d.category}</td>

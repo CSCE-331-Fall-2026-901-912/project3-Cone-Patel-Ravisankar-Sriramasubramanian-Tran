@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, MENU_KEYS } from "../data/menu.js";
+import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
 import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS } from "../data/inventory.js";
 import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
@@ -560,6 +560,51 @@ function MenuTab() {
 
   const [search, setSearch] = useState("");
 
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    category: "Milk Tea",
+    price: "",
+  });
+
+  function startEditing(drink) {
+    setEditingId(drink.id);
+    setEditForm({
+      name: drink.name,
+      category: drink.category,
+      price: String(drink.price),
+    });
+  }
+
+  function saveEdit() {
+    const name = editForm.name.trim();
+    const price = Number(editForm.price);
+
+    if (!name || !Number.isFinite(price) || price <= 0) return;
+
+    updateMenuItem(editingId, {
+      name,
+      category: editForm.category,
+      price,
+    });
+
+    setEditingId(null);
+  }
+
+  function handleDelete(drink) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${drink.name}"? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    deleteMenuItem(drink.id);
+
+    if (editingId === drink.id) {
+      setEditingId(null);
+    }
+  }
+
   const filteredMenu = menu.filter((drink) =>
     drink.name.toLowerCase().includes(search.trim().toLowerCase()) ||
     drink.category.toLowerCase().includes(search.trim().toLowerCase())
@@ -627,32 +672,110 @@ function MenuTab() {
               <th>Category</th>
               <th className="num">Price ($)</th>
               <th>On menu</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredMenu.map((d) => (
               <tr key={d.id} className={d.active ? "" : "row-off"}>
-                <td>{d.name}</td>
-                <td>{d.category}</td>
+                <td>
+                  {editingId === d.id ? (
+                    <input
+                      className="cell-input"
+                      value={editForm.name}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, name: e.target.value })
+                      }
+                      aria-label={`Edit name for ${d.name}`}
+                    />
+                  ) : (
+                    d.name
+                  )}
+                </td>
+                <td>
+                  {editingId === d.id ? (
+                    <select
+                      className="cell-select"
+                      value={editForm.category}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, category: e.target.value })
+                      }
+                    >
+                      {CATEGORIES.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    d.category
+                  )}
+                </td>
                 <td className="num">
-                  <input
-                    className="cell-input"
-                    type="number"
-                    min="0"
-                    step="0.25"
-                    defaultValue={d.price.toFixed(2)}
-                    aria-label={`Price for ${d.name}`}
-                    onBlur={(e) => {
-                      const price = parseFloat(e.target.value);
-                      if (price > 0 && price !== d.price) updateMenuItem(d.id, { price });
-                    }}
-                  />
+                  {editingId === d.id ? (
+                    <input
+                      className="cell-input"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={editForm.price}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, price: e.target.value })
+                      }
+                      aria-label={`Edit price for ${d.name}`}
+                    />
+                  ) : (
+                    money(d.price)
+                  )}
                 </td>
                 <td>
                   <label className="toggle">
                     <input type="checkbox" checked={d.active} onChange={() => updateMenuItem(d.id, { active: !d.active })} />
                     {d.active ? "Yes" : "No"}
                   </label>
+                </td>
+                <td>
+                  {editingId === d.id ? (
+                    <div className="row-actions">
+                      <button
+                        type="button"
+                        className="btn btn-small btn-primary"
+                        onClick={saveEdit}
+                        disabled={
+                          !editForm.name.trim() ||
+                          !Number.isFinite(Number(editForm.price)) ||
+                          Number(editForm.price) <= 0
+                        }
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-small"
+                        onClick={() => setEditingId(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="row-actions">
+                      <button
+                        type="button"
+                        className="btn btn-small"
+                        onClick={() => startEditing(d)}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-small"
+                        onClick={() => handleDelete(d)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

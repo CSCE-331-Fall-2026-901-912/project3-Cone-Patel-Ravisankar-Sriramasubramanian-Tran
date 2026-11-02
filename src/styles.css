@@ -869,3 +869,483 @@ h1, h2, .hub-card-title {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
+/* ==========================================
+   Boba Bliss - Retro Cashier Screen Theme
+   ========================================== */
+
+.cashier {
+  background: #FFF8F1;
+}
+
+/* Header */
+.cashier .cashier-header {
+  background: #FBE7E2;
+  color: #58392F;
+  border-bottom: 2px solid #E9CFC3;
+  padding: 1.25rem 2rem;
+}
+
+.cashier .cashier-header h1 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: #98634B;
+}
+
+.cashier .muted-light {
+  color: #896E61;
+  opacity: 1;
+}
+
+.cashier .employee-select select {
+  background: #FFFDF9;
+  color: #58392F;
+  border: 2px solid #E9CFC3;
+  border-radius: 10px;
+  padding: 0.4rem 0.75rem;
+}
+
+/* Menu area */
+.cashier .cashier-menu {
+  padding: 2rem;
+  gap: 1.75rem;
+}
+
+.cashier .cashier-category h2 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #98634B;
+  margin-bottom: 1rem;
+}
+
+.cashier .cashier-grid {
+  gap: 1rem;
+}
+
+/* Drink cards */
+.cashier .cashier-item {
+  background: #FFFDF9;
+  border: 2px solid #E9CFC3;
+  border-radius: 18px;
+  min-height: 100px;
+  padding: 1rem 1.25rem;
+  box-shadow: 3px 3px 0 #F0D4C9;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.cashier .cashier-item:hover {
+  background: #FBE7E2;
+  border-color: #B98272;
+  transform: translateY(-2px);
+}
+
+.cashier .cashier-item-price {
+  color: #98634B;
+  font-weight: 700;
+}
+
+/* Current order panel */
+.cashier .cashier-order {
+  background: #FBE7E2;
+  border-left: 2px solid #E9CFC3;
+  padding: 1.75rem;
+  gap: 1rem;
+}
+
+.cashier .cashier-order h2 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 1.7rem;
+  font-weight: 400;
+  color: #98634B;
+}
+
+.cashier .cart-total {
+  border-top: 2px solid #E9CFC3;
+  padding-top: 1rem;
+  color: #58392F;
+}
+
+/* Payment buttons */
+.cashier .btn-primary {
+  background: #98634B;
+  border-color: #98634B;
+  color: white;
+  border-radius: 999px;
+}
+
+.cashier .btn-primary:hover:not(:disabled) {
+  background: #754A38;
+}
+
+.cashier .btn-link {
+  color: #98634B;
+}
+
+/* Smaller screens */
+@media (max-width: 850px) {
+  .cashier {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .cashier .cashier-header {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .cashier .cashier-body {
+    grid-template-columns: 1fr;
+  }
+
+  .cashier .cashier-menu {
+    overflow-y: visible;
+    padding: 1.5rem;
+  }
+
+  .cashier .cashier-order {
+    border-left: none;
+    border-top: 2px solid #E9CFC3;
+  }
+}
+
+/* ==========================================
+   Boba Bliss - Retro Customer Kiosk Theme
+   ========================================== */
+
+.kiosk {
+  background: #FFF8F1;
+  color: #58392F;
+}
+
+/* Header */
+.kiosk .kiosk-header {
+  background: #FBE7E2;
+  color: #58392F;
+  border-bottom: 2px solid #E9CFC3;
+  padding: 2rem;
+  text-align: center;
+}
+
+.kiosk .kiosk-header h1 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 3rem;
+  font-weight: 400;
+  color: #98634B;
+}
+
+.kiosk .kiosk-header p {
+  color: #896E61;
+  font-size: 1.05rem;
+  opacity: 1;
+}
+
+/* Category navigation */
+.kiosk .category-tabs {
+  background: #FFF8F1;
+  border-bottom: 2px solid #E9CFC3;
+  padding: 1.25rem 2rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.kiosk .tab {
+  background: #FFFDF9;
+  color: #58392F;
+  border: 2px solid #E9CFC3;
+  border-radius: 999px;
+  padding: 0.65rem 1.4rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.kiosk .tab:hover {
+  background: #FBE7E2;
+  transform: translateY(-2px);
+}
+
+.kiosk .tab-active,
+.kiosk .tab-active:hover {
+  background: #F8DCD8;
+  color: #58392F;
+  border-color: #B98272;
+  box-shadow: 3px 3px 0 #E7B7A8;
+}
+
+/* Main layout */
+.kiosk .kiosk-body {
+  padding: 2rem;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+/* Drink cards */
+.kiosk .menu-grid {
+  gap: 1.25rem;
+}
+
+.kiosk .drink-card {
+  background: #FFFDF9;
+  color: #58392F;
+  border: 2px solid #E9CFC3;
+  border-radius: 20px;
+  min-height: 160px;
+  padding: 1.5rem;
+  box-shadow: 4px 4px 0 #F0D4C9;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.kiosk .drink-card:hover {
+  background: #FBE7E2;
+  border-color: #B98272;
+  transform: translateY(-3px);
+}
+
+.kiosk .drink-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #58392F;
+}
+
+.kiosk .drink-price {
+  color: #98634B;
+  font-weight: 700;
+}
+
+/* Shopping cart */
+.kiosk .cart {
+  background: #FBE7E2;
+  border: 2px solid #E9CFC3;
+  border-radius: 22px;
+  padding: 1.75rem;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.kiosk .cart h2 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 1.7rem;
+  font-weight: 400;
+  color: #98634B;
+}
+
+.kiosk .cart-total {
+  border-top: 2px solid #E9CFC3;
+  padding-top: 1rem;
+  color: #58392F;
+}
+
+/* Order button */
+.kiosk .btn-primary {
+  background: #98634B;
+  border-color: #98634B;
+  color: white;
+  border-radius: 999px;
+}
+
+.kiosk .btn-primary:hover:not(:disabled) {
+  background: #754A38;
+}
+
+/* Order confirmation */
+.kiosk-confirm {
+  background: #FFF8F1;
+  text-align: center;
+}
+
+.kiosk-confirm h1 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 3rem;
+  color: #98634B;
+}
+
+.kiosk-confirm .order-number {
+  font-family: "DM Serif Display", Georgia, serif;
+  color: #98634B;
+}
+
+/* Responsive layout */
+@media (max-width: 900px) {
+  .kiosk .kiosk-body {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+
+  .kiosk .cart {
+    position: static;
+  }
+
+  .kiosk .category-tabs {
+    padding: 1rem;
+  }
+}
+
+/* ==========================================
+   Boba Bliss - Retro Kitchen Display Theme
+   ========================================== */
+
+.kitchen {
+  background: #FFF8F1;
+  color: #58392F;
+  min-height: 100vh;
+}
+
+/* Header */
+.kitchen .kitchen-header {
+  background: #FBE7E2;
+  color: #58392F;
+  border-bottom: 2px solid #E9CFC3;
+  padding: 1.5rem 2rem;
+  align-items: center;
+}
+
+.kitchen .kitchen-header h1 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: #98634B;
+}
+
+.kitchen .kitchen-header p {
+  color: #896E61;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Ticket grid */
+.kitchen .ticket-grid {
+  padding: 2rem;
+  gap: 1.5rem;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(280px, 100%), 1fr)
+  );
+}
+
+/* Order tickets */
+.kitchen .ticket {
+  background: #FFFDF9;
+  color: #58392F;
+  border: 2px solid #E9CFC3;
+  border-top: 7px solid #D9968E;
+  border-radius: 20px;
+  padding: 1.5rem;
+  gap: 0.85rem;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.kitchen .ticket-progress {
+  border-top-color: #B7791F;
+}
+
+/* Ticket header */
+.kitchen .ticket-header h2 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+  color: #98634B;
+}
+
+.kitchen .ticket-status {
+  color: #896E61;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Waiting timers */
+.kitchen .timer {
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.kitchen .timer-ok {
+  background: #E3F1E8;
+  color: #487A59;
+}
+
+.kitchen .timer-warn {
+  background: #FBEFD9;
+  color: #8A5A12;
+}
+
+.kitchen .timer-late {
+  background: #F9DEDB;
+  color: #C0392B;
+}
+
+/* Drink details */
+.kitchen .ticket-items {
+  font-size: 1.05rem;
+  gap: 0.9rem;
+}
+
+.kitchen .mods {
+  color: #896E61;
+  line-height: 1.5;
+}
+
+/* Ticket action buttons */
+.kitchen .btn {
+  border-radius: 999px;
+  font-weight: 700;
+  min-height: 46px;
+}
+
+.kitchen .btn-primary {
+  background: #98634B;
+  border-color: #98634B;
+  color: white;
+}
+
+.kitchen .btn-primary:hover:not(:disabled) {
+  background: #754A38;
+}
+
+.kitchen .btn-success {
+  background: #487A59;
+  border-color: #487A59;
+  color: white;
+}
+
+/* Empty kitchen message */
+.kitchen .kitchen-empty {
+  color: #896E61;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+/* Recently ready orders */
+.kitchen .ready-bar {
+  background: #FBE7E2;
+  color: #58392F;
+  border-top: 2px solid #E9CFC3;
+  padding: 1rem 2rem;
+}
+
+.kitchen .ready-chip {
+  background: #487A59;
+  color: white;
+  border-radius: 999px;
+  padding: 0.4rem 0.6rem 0.4rem 0.9rem;
+}
+
+.kitchen .ready-chip .btn-link {
+  color: white;
+}
+
+/* Responsive layout */
+@media (max-width: 650px) {
+  .kitchen .kitchen-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .kitchen .ticket-grid {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+}
+

@@ -1349,3 +1349,54 @@ h1, h2, .hub-card-title {
   }
 }
 
+
+/* Kitchen order completion confirmation */
+
+.kitchen-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.kitchen-confirm-dialog {
+  background: #ffffff;
+  color: #222222;
+  border-radius: 14px;
+  padding: 28px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+}
+
+.kitchen-confirm-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+}
+
+.kitchen-confirm-dialog p {
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.kitchen-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .kitchen-confirm-actions {
+    flex-direction: column;
+  }
+
+  .kitchen-confirm-actions button {
+    width: 100%;
+  }
+}
+

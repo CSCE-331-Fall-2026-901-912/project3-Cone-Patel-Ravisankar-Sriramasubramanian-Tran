@@ -1400,3 +1400,61 @@ h1, h2, .hub-card-title {
   }
 }
 
+
+/* Customer Kiosk drink search */
+
+.kiosk-search {
+  padding: 16px 24px;
+}
+
+.kiosk-search label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.kiosk-search-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kiosk-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 2px solid var(--border, #d5d5d5);
+  border-radius: 10px;
+  font: inherit;
+}
+
+.kiosk-search input:focus {
+  outline: 2px solid #6b8e6b;
+  outline-offset: 2px;
+}
+
+.kiosk-search .muted {
+  margin-top: 10px;
+}
+
+.kiosk-no-results {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+}
+
+@media (max-width: 600px) {
+  .kiosk-search {
+    padding: 12px 16px;
+  }
+
+  .kiosk-search-controls {
+    flex-wrap: wrap;
+  }
+
+  .kiosk-search input {
+    width: 100%;
+  }
+}
+
+

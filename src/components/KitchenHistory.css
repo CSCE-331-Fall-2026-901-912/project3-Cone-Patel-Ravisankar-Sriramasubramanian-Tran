@@ -1,0 +1,238 @@
+/* Kitchen Display tabs and History view. Uses the Boba Bliss kitchen colors. */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Tabs */
+.kitchen-tabs {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem 0;
+}
+
+.kitchen .kitchen-tab {
+  min-height: 48px;
+  padding: 0.6rem 1.4rem;
+  border: 2px solid #E9CFC3;
+  border-radius: 999px;
+  background: #FFFDF9;
+  color: #58392F;
+  font-weight: 700;
+}
+
+.kitchen .kitchen-tab:hover {
+  background: #FBE7E2;
+}
+
+.kitchen .kitchen-tab-active,
+.kitchen .kitchen-tab-active:hover {
+  background: #F8DCD8;
+  border-color: #B98272;
+  box-shadow: 3px 3px 0 #E7B7A8;
+}
+
+.kitchen-tab-count {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #98634B;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+/* History */
+.history {
+  padding: 1.5rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.history-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
+  background: #FFFDF9;
+  border: 2px solid #E9CFC3;
+  border-radius: 18px;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.history-stat-label {
+  color: #896E61;
+  font-weight: 700;
+}
+
+.history-stat-value {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 2rem;
+  color: #98634B;
+}
+
+.history-table-wrap {
+  overflow-x: auto;
+  background: #FFFDF9;
+  border: 2px solid #E9CFC3;
+  border-radius: 18px;
+  box-shadow: 4px 4px 0 #F0D4C9;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #E9CFC3;
+}
+
+.history-table th {
+  background: #FBE7E2;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.history-source {
+  display: block;
+  color: #896E61;
+  font-size: 0.85rem;
+}
+
+.history-drinks {
+  max-width: 340px;
+}
+
+.kitchen .history-view {
+  min-height: 40px;
+  padding: 0.35rem 1rem;
+  background: #FFF8F1;
+  border-color: #E9CFC3;
+}
+
+.kitchen .history-view:hover {
+  background: #FBE7E2;
+}
+
+/* Details window */
+.history-window {
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem 1.75rem;
+  background: #FFFDF9;
+  color: #58392F;
+  border: 2px solid #E9CFC3;
+  border-radius: 22px;
+  box-shadow: 6px 6px 0 #F0D4C9;
+}
+
+.history-window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.history-window-header h2 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
+  font-size: 2rem;
+  color: #98634B;
+}
+
+.history-window-sub {
+  margin: 0.2rem 0 0;
+  color: #896E61;
+  font-weight: 600;
+}
+
+.kitchen .history-close {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.history-window h3 {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #896E61;
+}
+
+.history-items {
+  flex: none;
+}
+
+.history-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  border-left: 3px solid #E9CFC3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.history-timeline li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.history-step-label {
+  min-width: 90px;
+  font-weight: 700;
+}
+
+.history-step-wait {
+  color: #487A59;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.history-step-missing {
+  color: #896E61;
+}
+
+.history-total {
+  margin: 0.25rem 0 0;
+}
+
+@media (max-width: 650px) {
+  .kitchen-tabs,
+  .history {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}

@@ -7,6 +7,11 @@ export default function KitchenDisplay() {
   const orders = useLive(getActiveOrders, ORDER_KEYS);
   const ready = useLive(getRecentlyReady, ORDER_KEYS);
   const completedCount = useLive(getCompletedOrders, ORDER_KEYS).length;
+  const totalOpen = orders.length;
+  const newOrders = orders.filter((order) => order.status === "new").length;
+  const inProgressOrders = orders.filter(
+    (order) => order.status === "in-progress"
+  ).length;
   const [tab, setTab] = useState("active"); // "active" or "history"
   const [now, setNow] = useState(Date.now());
 
@@ -23,7 +28,22 @@ export default function KitchenDisplay() {
           {orders.length} open {orders.length === 1 ? "order" : "orders"}
         </p>
       </header>
+      <section className="kitchen-summary" aria-label="Kitchen order summary">
+        <div className="kitchen-summary-card">
+          <span className="kitchen-summary-label">Total Open</span>
+          <strong className="kitchen-summary-value">{totalOpen}</strong>
+        </div>
 
+        <div className="kitchen-summary-card">
+          <span className="kitchen-summary-label">New</span>
+          <strong className="kitchen-summary-value">{newOrders}</strong>
+        </div>
+
+        <div className="kitchen-summary-card">
+          <span className="kitchen-summary-label">In Progress</span>
+          <strong className="kitchen-summary-value">{inProgressOrders}</strong>
+        </div>
+      </section>
       <nav className="kitchen-tabs" aria-label="Kitchen views">
         <button
           className={`kitchen-tab ${tab === "active" ? "kitchen-tab-active" : ""}`}

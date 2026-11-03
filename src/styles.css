@@ -1457,4 +1457,39 @@ h1, h2, .hub-card-title {
   }
 }
 
+.kitchen-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.kitchen-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+}
+
+.kitchen-summary-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted, #64748b);
+}
+
+.kitchen-summary-value {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text, #1f2937);
+}
+
+@media (max-width: 600px) {
+  .kitchen-summary {
+    grid-template-columns: 1fr;
+  }
+}
 

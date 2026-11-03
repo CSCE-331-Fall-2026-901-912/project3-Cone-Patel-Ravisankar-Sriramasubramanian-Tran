@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
-import { getActiveOrders, getRecentlyReady, updateStatus, ORDER_KEYS } from "../data/orders.js";
+import { getAllOrders, getRecentlyReady, updateStatus, ORDER_KEYS } from "../data/orders.js";
 import { useLive } from "../data/store.js";
 
 // Shows every order that still needs to be made, oldest first.
 // Staff tap "Start" when they begin a ticket and "Mark Ready" when it's done.
 export default function KitchenDisplay() {
-  const orders = useLive(getActiveOrders, ORDER_KEYS);
+  const allOrders = useLive(getAllOrders, ORDER_KEYS);
+  const [statusFilter, setStatusFilter] = useState("active");
+  const orders = allOrders.filter((order) =>
+    statusFilter === "all" ? true : statusFilter === "active" ? order.status !== "ready" : order.status === statusFilter
+  );
+  const openCount = allOrders.filter((order) => order.status !== "ready").length;
   const ready = useLive(getRecentlyReady, ORDER_KEYS);
   const [now, setNow] = useState(Date.now());
 
@@ -20,12 +25,26 @@ export default function KitchenDisplay() {
       <header className="kitchen-header">
         <h1>Kitchen Display</h1>
         <p>
-          {orders.length} open {orders.length === 1 ? "order" : "orders"}
+          {openCount} open {openCount === 1 ? "order" : "orders"}
         </p>
       </header>
 
+      <div className="kitchen-filters" role="group" aria-label="Filter orders by status">
+        {[
+          ["active", "Active"],
+          ["all", "All Orders"],
+          ["new", "New"],
+          ["in-progress", "In Progress"],
+          ["ready", "Ready"],
+        ].map(([value, label]) => (
+          <button key={value} type="button" className={`kitchen-filter-btn ${statusFilter === value ? "selected" : ""}`} aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)}>
+            {label} ({allOrders.filter((o) => value === "all" || (value === "active" ? o.status !== "ready" : o.status === value)).length})
+          </button>
+        ))}
+      </div>
+
       {orders.length === 0 ? (
-        <p className="kitchen-empty">No orders right now. New orders from the kiosk and cashier appear here automatically.</p>
+        <p className="kitchen-empty">No orders match this filter. New orders from the kiosk and cashier appear automatically.</p>
       ) : (
         <section className="ticket-grid" aria-label="Open orders" aria-live="polite">
           {orders.map((order) => (
@@ -60,7 +79,7 @@ function Ticket({ order, now }) {
   const inProgress = order.status === "in-progress";
 
   return (
-    <article className={`ticket ${inProgress ? "ticket-progress" : ""}`}>
+    <article className={`ticket ${inProgress ? "ticket-progress" : ""} ${order.status === "ready" ? "ticket-ready" : ""}`}>
       <header className="ticket-header">
         <h2>#{order.number}</h2>
         <span className={`timer timer-${urgency}`} aria-label={`Waiting ${minutes} minutes`}>
@@ -68,7 +87,7 @@ function Ticket({ order, now }) {
         </span>
       </header>
       <p className="ticket-status">
-        {inProgress ? "In progress" : "New"} · {order.source}
+        {order.status === "ready" ? "Ready" : inProgress ? "In progress" : "New"} · {order.source}
       </p>
 
       <ul className="ticket-items">
@@ -89,7 +108,11 @@ function Ticket({ order, now }) {
         ))}
       </ul>
 
-      {inProgress ? (
+      {order.status === "ready" ? (
+        <button className="btn btn-primary btn-block" onClick={() => updateStatus(order.number, "in-progress")}>
+          Recall
+        </button>
+      ) : inProgress ? (
         <button className="btn btn-success btn-block" onClick={() => updateStatus(order.number, "ready")}>
           Mark Ready
         </button>

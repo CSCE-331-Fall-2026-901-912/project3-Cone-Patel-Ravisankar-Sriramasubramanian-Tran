@@ -1349,3 +1349,14 @@ h1, h2, .hub-card-title {
   }
 }
 
+.kitchen-filters { display: flex; gap: 0.6rem; flex-wrap: wrap; padding: 1rem 2rem 0; }
+
+.kitchen-filter-btn { border: 1px solid #77685c; border-radius: 999px; background: #342b25; color: #f5efe8; padding: 0.55rem 0.95rem; cursor: pointer; font: inherit; }
+
+.kitchen-filter-btn:hover { background: #493b32; }
+
+.kitchen-filter-btn.selected { background: #f5efe8; color: #1f1a16; border-color: #f5efe8; font-weight: 700; }
+
+.kitchen-filter-btn:focus-visible { outline: 3px solid #e5b86b; outline-offset: 2px; }
+
+.ticket-ready { border-top-color: var(--success); }

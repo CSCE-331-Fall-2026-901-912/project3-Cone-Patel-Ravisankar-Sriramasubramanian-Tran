@@ -1383,7 +1383,7 @@ h1, h2, .hub-card-title {
   outline: none;
 }
 .cashier-menu > p.muted:empty {
-  display: none;
+  display: none;}
 
 /* Kitchen order completion confirmation */
 
@@ -1692,6 +1692,84 @@ h1, h2, .hub-card-title {
   }
 
   .kitchen-toolbar .kitchen-sort select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.kitchen .kitchen-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls .kitchen-filter,
+.kitchen .kitchen-toolbar .kitchen-controls .kitchen-sort {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: auto;
+  min-width: 0;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls label {
+  color: #58392f;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls select {
+  min-height: 42px;
+  padding: 0.6rem 0.9rem;
+  background: #fffdf9;
+  color: #58392f;
+  border: 2px solid #e9cfc3;
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .kitchen .kitchen-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kitchen .kitchen-toolbar .kitchen-controls {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 650px) {
+  .kitchen .kitchen-toolbar .kitchen-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kitchen .kitchen-toolbar .kitchen-controls .kitchen-filter,
+  .kitchen .kitchen-toolbar .kitchen-controls .kitchen-sort {
+    width: 100%;
+  }
+
+  .kitchen .kitchen-toolbar .kitchen-controls select {
     flex: 1;
     min-width: 0;
   }

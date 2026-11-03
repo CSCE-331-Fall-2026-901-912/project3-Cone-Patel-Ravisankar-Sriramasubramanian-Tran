@@ -1349,6 +1349,41 @@ h1, h2, .hub-card-title {
   }
 }
 
+/*cashier drink search*/
+.cashier-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem 0.5rem 1.1rem;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(88, 57, 47, 0.08);
+}
+.cashier-search:focus-within {
+  border-color: var(--primary);
+}
+.cashier-search label {
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.cashier-search input[type="search"] {
+  flex: 1;
+  min-height: 40px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: var(--text);
+}
+.cashier-search input[type="search"]::placeholder {
+  color: var(--muted);
+}
+.cashier-search input[type="search"]:focus-visible {
+  outline: none;
+}
+.cashier-menu > p.muted:empty {
+  display: none;
 
 /* Kitchen order completion confirmation */
 

@@ -14,6 +14,23 @@ export default function KitchenDisplay() {
   ).length;
   const [tab, setTab] = useState("active"); // "active" or "history"
   const [now, setNow] = useState(Date.now());
+  const [sortBy, setSortBy] = useState("longest");
+  const sortedOrders = [...orders].sort((a, b) => {
+    const aTime = new Date(a.placedAt).getTime();
+    const bTime = new Date(b.placedAt).getTime();
+
+    switch (sortBy) {
+      case "newest":
+        return bTime - aTime;
+
+      case "oldest":
+        return aTime - bTime;
+
+      case "longest":
+      default:
+        return aTime - bTime;
+    }
+  });
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -44,24 +61,42 @@ export default function KitchenDisplay() {
           <strong className="kitchen-summary-value">{inProgressOrders}</strong>
         </div>
       </section>
-      <nav className="kitchen-tabs" aria-label="Kitchen views">
-        <button
-          className={`kitchen-tab ${tab === "active" ? "kitchen-tab-active" : ""}`}
-          aria-pressed={tab === "active"}
-          onClick={() => setTab("active")}
-        >
-          Active
-          <span className="kitchen-tab-count">{orders.length}</span>
-        </button>
-        <button
-          className={`kitchen-tab ${tab === "history" ? "kitchen-tab-active" : ""}`}
-          aria-pressed={tab === "history"}
-          onClick={() => setTab("history")}
-        >
-          History
-          <span className="kitchen-tab-count">{completedCount}</span>
-        </button>
-      </nav>
+      <div className="kitchen-toolbar">
+        <nav className="kitchen-tabs" aria-label="Kitchen views">
+          <button
+            className={`kitchen-tab ${tab === "active" ? "kitchen-tab-active" : ""}`}
+            aria-pressed={tab === "active"}
+            onClick={() => setTab("active")}
+          >
+            Active
+            <span className="kitchen-tab-count">{orders.length}</span>
+          </button>
+
+          <button
+            className={`kitchen-tab ${tab === "history" ? "kitchen-tab-active" : ""}`}
+            aria-pressed={tab === "history"}
+            onClick={() => setTab("history")}
+          >
+            History
+            <span className="kitchen-tab-count">{completedCount}</span>
+          </button>
+        </nav>
+
+        {tab === "active" && (
+          <div className="kitchen-sort">
+            <label htmlFor="kitchen-sort-select">Sort orders by:</label>
+            <select
+              id="kitchen-sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="longest">Longest Waiting Time</option>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+        )}
+      </div>
 
       {tab === "history" ? (
         <KitchenHistory />
@@ -69,7 +104,7 @@ export default function KitchenDisplay() {
         <p className="kitchen-empty">No orders right now. New orders from the kiosk and cashier appear here automatically.</p>
       ) : (
         <section className="ticket-grid" aria-label="Open orders" aria-live="polite">
-          {orders.map((order) => (
+          {sortedOrders.map((order) => (
             <Ticket key={order.number} order={order} now={now} />
           ))}
         </section>

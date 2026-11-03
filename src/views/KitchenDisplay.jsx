@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { getAllOrders, getRecentlyReady, updateStatus, ORDER_KEYS } from "../data/orders.js";
-import { getActiveOrders, getRecentlyReady, getCompletedOrders, updateStatus, ORDER_KEYS } from "../data/orders.js";
 import { useLive } from "../data/store.js";
-import KitchenHistory from "../components/KitchenHistory.jsx";
 
+// Shows every order that still needs to be made, oldest first.
+// Staff tap "Start" when they begin a ticket and "Mark Ready" when it's done.
 export default function KitchenDisplay() {
   const allOrders = useLive(getAllOrders, ORDER_KEYS);
   const [statusFilter, setStatusFilter] = useState("active");
@@ -12,33 +12,10 @@ export default function KitchenDisplay() {
   );
   const openCount = allOrders.filter((order) => order.status !== "ready").length;
   const ready = useLive(getRecentlyReady, ORDER_KEYS);
-  const completedCount = useLive(getCompletedOrders, ORDER_KEYS).length;
-  const totalOpen = orders.length;
-  const newOrders = orders.filter((order) => order.status === "new").length;
-  const inProgressOrders = orders.filter(
-    (order) => order.status === "in-progress"
-  ).length;
-  const [tab, setTab] = useState("active"); // "active" or "history"
   const [now, setNow] = useState(Date.now());
-  const [sortBy, setSortBy] = useState("longest");
-  const sortedOrders = [...orders].sort((a, b) => {
-    const aTime = new Date(a.placedAt).getTime();
-    const bTime = new Date(b.placedAt).getTime();
-
-    switch (sortBy) {
-      case "newest":
-        return bTime - aTime;
-
-      case "oldest":
-        return aTime - bTime;
-
-      case "longest":
-      default:
-        return aTime - bTime;
-    }
-  });
 
   useEffect(() => {
+    // Tick every second so the wait timers stay current.
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -51,13 +28,7 @@ export default function KitchenDisplay() {
           {openCount} open {openCount === 1 ? "order" : "orders"}
         </p>
       </header>
-      <section className="kitchen-summary" aria-label="Kitchen order summary">
-        <div className="kitchen-summary-card">
-          <span className="kitchen-summary-label">Total Open</span>
-          <strong className="kitchen-summary-value">{totalOpen}</strong>
-        </div>
 
-<<<<<<< HEAD
       <div className="kitchen-filters" role="group" aria-label="Filter orders by status">
         {[
           ["active", "Active"],
@@ -74,68 +45,15 @@ export default function KitchenDisplay() {
 
       {orders.length === 0 ? (
         <p className="kitchen-empty">No orders match this filter. New orders from the kiosk and cashier appear automatically.</p>
-=======
-        <div className="kitchen-summary-card">
-          <span className="kitchen-summary-label">New</span>
-          <strong className="kitchen-summary-value">{newOrders}</strong>
-        </div>
-
-        <div className="kitchen-summary-card">
-          <span className="kitchen-summary-label">In Progress</span>
-          <strong className="kitchen-summary-value">{inProgressOrders}</strong>
-        </div>
-      </section>
-      <div className="kitchen-toolbar">
-        <nav className="kitchen-tabs" aria-label="Kitchen views">
-          <button
-            className={`kitchen-tab ${tab === "active" ? "kitchen-tab-active" : ""}`}
-            aria-pressed={tab === "active"}
-            onClick={() => setTab("active")}
-          >
-            Active
-            <span className="kitchen-tab-count">{orders.length}</span>
-          </button>
-
-          <button
-            className={`kitchen-tab ${tab === "history" ? "kitchen-tab-active" : ""}`}
-            aria-pressed={tab === "history"}
-            onClick={() => setTab("history")}
-          >
-            History
-            <span className="kitchen-tab-count">{completedCount}</span>
-          </button>
-        </nav>
-
-        {tab === "active" && (
-          <div className="kitchen-sort">
-            <label htmlFor="kitchen-sort-select">Sort orders by:</label>
-            <select
-              id="kitchen-sort-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="longest">Longest Waiting Time</option>
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-            </select>
-          </div>
-        )}
-      </div>
-
-      {tab === "history" ? (
-        <KitchenHistory />
-      ) : orders.length === 0 ? (
-        <p className="kitchen-empty">No orders right now. New orders from the kiosk and cashier appear here automatically.</p>
->>>>>>> 65ca286c8f39688ffcb0c66ec079ca7c917d60f9
       ) : (
         <section className="ticket-grid" aria-label="Open orders" aria-live="polite">
-          {sortedOrders.map((order) => (
+          {orders.map((order) => (
             <Ticket key={order.number} order={order} now={now} />
           ))}
         </section>
       )}
 
-      {tab === "active" && ready.length > 0 && (
+      {ready.length > 0 && (
         <footer className="ready-bar" aria-label="Recently completed">
           <span>Recently ready:</span>
           {ready.map((o) => (
@@ -156,6 +74,7 @@ function Ticket({ order, now }) {
   const seconds = Math.max(0, Math.floor((now - order.placedAt) / 1000));
   const minutes = Math.floor(seconds / 60);
   const waitText = `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+  // Color the timer so slow tickets stand out: yellow after 5 min, red after 10.
   const urgency = minutes >= 10 ? "late" : minutes >= 5 ? "warn" : "ok";
   const inProgress = order.status === "in-progress";
 

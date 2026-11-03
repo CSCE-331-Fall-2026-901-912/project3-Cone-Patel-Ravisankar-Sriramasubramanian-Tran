@@ -1348,362 +1348,45 @@ h1, h2, .hub-card-title {
     gap: 1rem;
   }
 }
+/* ---------- Kitchen Status Filters ---------- */
 
-.kitchen-filters { display: flex; gap: 0.6rem; flex-wrap: wrap; padding: 1rem 2rem 0; }
-
-.kitchen-filter-btn { border: 1px solid #77685c; border-radius: 999px; background: #342b25; color: #f5efe8; padding: 0.55rem 0.95rem; cursor: pointer; font: inherit; }
-
-.kitchen-filter-btn:hover { background: #493b32; }
-
-.kitchen-filter-btn.selected { background: #f5efe8; color: #1f1a16; border-color: #f5efe8; font-weight: 700; }
-
-.kitchen-filter-btn:focus-visible { outline: 3px solid #e5b86b; outline-offset: 2px; }
-
-.ticket-ready { border-top-color: var(--success); }
-/*cashier drink search*/
-.cashier-search {
+.kitchen .kitchen-filters {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
-  padding: 0.5rem 0.75rem 0.5rem 1.1rem;
-  background: var(--surface);
-  border: 2px solid var(--border);
+  padding: 1.25rem 2rem;
+  background: #FFF8F1;
+  border-bottom: 2px solid #E9CFC3;
+}
+
+.kitchen .kitchen-filter-btn {
+  min-height: 44px;
+  padding: 0.65rem 1.25rem;
+  background: #FFFDF9;
+  color: #58392F;
+  border: 2px solid #E9CFC3;
   border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(88, 57, 47, 0.08);
-}
-.cashier-search:focus-within {
-  border-color: var(--primary);
-}
-.cashier-search label {
   font-weight: 600;
-  color: var(--primary);
-  white-space: nowrap;
-}
-.cashier-search input[type="search"] {
-  flex: 1;
-  min-height: 40px;
-  border: none;
-  background: transparent;
-  font: inherit;
-  color: var(--text);
-}
-.cashier-search input[type="search"]::placeholder {
-  color: var(--muted);
-}
-.cashier-search input[type="search"]:focus-visible {
-  outline: none;
-}
-.cashier-menu > p.muted:empty {
-  display: none;
-
-/* Kitchen order completion confirmation */
-
-.kitchen-confirm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
+  transition: background 0.2s, transform 0.2s;
 }
 
-.kitchen-confirm-dialog {
-  background: #ffffff;
-  color: #222222;
-  border-radius: 14px;
-  padding: 28px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+.kitchen .kitchen-filter-btn:hover {
+  background: #FBE7E2;
+  transform: translateY(-2px);
 }
 
-.kitchen-confirm-dialog h2 {
-  margin: 0 0 12px;
-  font-size: 1.4rem;
-}
-
-.kitchen-confirm-dialog p {
-  margin: 0 0 24px;
-  line-height: 1.5;
-}
-
-.kitchen-confirm-actions {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-@media (max-width: 480px) {
-  .kitchen-confirm-actions {
-    flex-direction: column;
-  }
-
-  .kitchen-confirm-actions button {
-    width: 100%;
-  }
-}
-
-
-/* Customer Kiosk drink search */
-
-.kiosk-search {
-  padding: 16px 24px;
-}
-
-.kiosk-search label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.kiosk-search-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.kiosk-search input {
-  flex: 1;
-  min-width: 0;
-  padding: 12px 16px;
-  border: 2px solid var(--border, #d5d5d5);
-  border-radius: 10px;
-  font: inherit;
-}
-
-.kiosk-search input:focus {
-  outline: 2px solid #6b8e6b;
-  outline-offset: 2px;
-}
-
-.kiosk-search .muted {
-  margin-top: 10px;
-}
-
-.kiosk-no-results {
-  padding: 24px;
-  text-align: center;
-  color: #666;
-}
-
-@media (max-width: 600px) {
-  .kiosk-search {
-    padding: 12px 16px;
-  }
-
-  .kiosk-search-controls {
-    flex-wrap: wrap;
-  }
-
-  .kiosk-search input {
-    width: 100%;
-  }
-}
-
-.kitchen-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 20px 0;
-}
-
-.kitchen-summary-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 20px;
-  background: var(--surface, #fff);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: 12px;
-}
-
-.kitchen-summary-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted, #64748b);
-}
-
-.kitchen-summary-value {
-  font-size: 32px;
+.kitchen .kitchen-filter-btn.selected {
+  background: #98634B;
+  color: white;
+  border-color: #98634B;
   font-weight: 700;
-  line-height: 1.2;
-  color: var(--text, #1f2937);
 }
 
-@media (max-width: 600px) {
-  .kitchen-summary {
-    grid-template-columns: 1fr;
-  }
-}
-
-.kitchen-sort {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  margin: 16px 0;
-}
-
-.kitchen-sort label {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.kitchen-sort select {
-  padding: 9px 12px;
-  border: 1px solid var(--border, #d1d5db);
-  border-radius: 8px;
-  background: var(--surface, #fff);
-  color: var(--text, #1f2937);
-  font: inherit;
-  cursor: pointer;
-}
-
-.kitchen-sort select:focus-visible {
-  outline: 2px solid #2563eb;
+.kitchen .kitchen-filter-btn:focus-visible {
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
-@media (max-width: 600px) {
-  .kitchen-sort {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .kitchen-sort select {
-    width: 100%;
-  }
-}
-
-/* Keep Kitchen Display within the screen */
-.kitchen {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  overflow-x: clip;
-}
-
-/* Prevent summary cards from overflowing */
-.kitchen-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 20px 24px;
-}
-
-.kitchen-summary-card {
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-/* Keep sorting controls inside the page */
-.kitchen-sort {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  margin: 16px 24px;
-}
-
-.kitchen-sort select {
-  max-width: 100%;
-  min-width: 0;
-}
-
-/* Responsive layout */
-@media (max-width: 700px) {
-  .kitchen-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .kitchen-sort {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .kitchen-sort select {
-    width: 100%;
-  }
-}
-
-/* Compact kitchen summary */
-.kitchen-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 16px 24px;
-}
-
-.kitchen-summary-card {
-  padding: 12px 16px;
-  gap: 4px;
-  min-width: 0;
-}
-
-.kitchen-summary-label {
-  font-size: 12px;
-}
-
-.kitchen-summary-value {
-  font-size: 24px;
-  line-height: 1.1;
-}
-
-/* Tabs and sorting on the same line */
-.kitchen-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 20px 24px;
-  flex-wrap: wrap;
-}
-
-.kitchen-toolbar .kitchen-tabs {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-}
-
-.kitchen-toolbar .kitchen-sort {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-}
-
-.kitchen-toolbar .kitchen-sort select {
-  max-width: 220px;
-  padding: 8px 12px;
-}
-
-/* Small screens */
-@media (max-width: 700px) {
-  .kitchen-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 12px;
-    gap: 8px;
-  }
-
-  .kitchen-summary-card {
-    padding: 10px;
-  }
-
-  .kitchen-toolbar {
-    margin: 16px 12px;
-  }
-
-  .kitchen-toolbar .kitchen-sort {
-    width: 100%;
-  }
-
-  .kitchen-toolbar .kitchen-sort select {
-    flex: 1;
-    min-width: 0;
-  }
+.kitchen .ticket.ticket-ready {
+  border-top-color: #487A59;
 }

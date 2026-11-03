@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CATEGORIES, getActiveMenu, MENU_KEYS } from "../data/menu.js";
 import { getEmployees, EMPLOYEE_KEYS } from "../data/employees.js";
 import { placeOrder, itemPrice, orderTotals, getActiveOrders, ORDER_KEYS } from "../data/orders.js";
@@ -17,6 +17,7 @@ export default function CashierScreen() {
   const [cart, setCart] = useState([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [pendingPayment, setPendingPayment] = useState(null);
 
   const { subtotal, tax, total } = orderTotals(cart);
   const employee = employees.find((e) => e.id === Number(employeeId));
@@ -38,6 +39,13 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
   }
 
   function charge(payment) {
+    setPendingPayment(null);
+    useEffect(() => {
+      if (!pendingPayment) return undefined;
+      const onKey = (e) => e.key === "Escape" && setPendingPayment(null);
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [pendingPayment]);
     const order = placeOrder(cart, { source: "Cashier", employee: employee?.name ?? null, payment });
     setCart([]);
     setMessage(`Order #${order.number} sent to kitchen · ${payment} · ${money(order.total)}`);
@@ -149,10 +157,10 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
             <span>{money(total)}</span>
           </div>
           <div className="pay-buttons">
-            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => charge("Cash")}>
+            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => setPendingPayment("Cash")}>
               Cash
             </button>
-            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => charge("Card")}>
+            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => setPendingPayment("Card")}>
               Card
             </button>
           </div>
@@ -161,7 +169,20 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
           </p>
         </aside>
       </div>
-
+      {pendingPayment && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+          <div className="dialog dialog-compact">
+            <h2 id="confirm-title">Confirm {pendingPayment} payment</h2>
+            <p>
+              {cart.reduce((n, i) => n + i.quantity, 0)} item(s) · <strong>{money(total)}</strong> by {pendingPayment.toLowerCase()}. Send this order to the kitchen?
+            </p>
+            <div className="dialog-actions">
+              <button className="btn" autoFocus onClick={() => setPendingPayment(null)}>Cancel</button>
+              <button className="btn btn-primary" onClick={() => charge(pendingPayment)}>Confirm {pendingPayment}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {customizing && <CustomizeDialog drink={customizing} onAdd={addToCart} onCancel={() => setCustomizing(null)} />}
     </div>
   );

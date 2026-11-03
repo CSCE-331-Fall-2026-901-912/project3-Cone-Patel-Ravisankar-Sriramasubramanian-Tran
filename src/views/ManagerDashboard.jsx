@@ -794,7 +794,7 @@ function InventoryTab() {
   // Inventory search and low-stock filtering.
   const [search, setSearch] = useState("");
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-
+  const [restockAmounts, setRestockAmounts] = useState({});
   const [form, setForm] = useState({ name: "", unit: "", quantity: "", minimum: "" });
 
   function submit(e) {
@@ -827,6 +827,32 @@ function InventoryTab() {
   function clearInventoryFilters() {
     setSearch("");
     setShowLowStockOnly(false);
+  }
+
+  function handleRestock(item) {
+    const input = restockAmounts[item.id];
+    const amount = Number(input);
+
+    // Only accept positive whole numbers.
+    if (
+      input === undefined ||
+      String(input).trim() === "" ||
+      !Number.isSafeInteger(amount) ||
+      amount <= 0
+    ) {
+      return;
+    }
+
+    // Add the entered amount to the existing stock.
+    updateInventoryItem(item.id, {
+      quantity: item.quantity + amount,
+    });
+
+    // Clear the input after restocking.
+    setRestockAmounts((prev) => ({
+      ...prev,
+      [item.id]: "",
+    }));
   }
 
 
@@ -925,9 +951,35 @@ function InventoryTab() {
                 <td className="num">{i.minimum}</td>
                 <td>{isLowStock(i) ? <span className="status status-low">Low</span> : <span className="status status-ok">OK</span>}</td>
                 <td>
-                  <button className="btn btn-small" onClick={() => updateInventoryItem(i.id, { quantity: i.quantity + 10 })}>
-                    +10
-                  </button>
+                  <div className="row-actions">
+                    <input
+                      className="cell-input"
+                      type="number"
+                      min="1"
+                      step="1"
+                      placeholder="Qty"
+                      value={restockAmounts[i.id] ?? ""}
+                      aria-label={`Restock quantity for ${i.name}`}
+                      onChange={(e) =>
+                        setRestockAmounts((prev) => ({
+                          ...prev,
+                          [i.id]: e.target.value,
+                        }))
+                      }
+                    />
+
+                    <button
+                      type="button"
+                      className="btn btn-small btn-primary"
+                      disabled={
+                        !Number.isSafeInteger(Number(restockAmounts[i.id])) ||
+                        Number(restockAmounts[i.id]) <= 0
+                      }
+                      onClick={() => handleRestock(i)}
+                    >
+                      Add
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -16,9 +16,13 @@ export default function CashierScreen() {
   const [customizing, setCustomizing] = useState(null);
   const [cart, setCart] = useState([]);
   const [message, setMessage] = useState("");
+  const [search, setSearch] = useState("");
 
   const { subtotal, tax, total } = orderTotals(cart);
   const employee = employees.find((e) => e.id === Number(employeeId));
+
+const query = search.trim().toLowerCase();
+const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(query)) : menu;
 
   function addToCart(item) {
     setCart([...cart, { ...item, cartId: crypto.randomUUID() }]);
@@ -61,11 +65,27 @@ export default function CashierScreen() {
 
       <div className="cashier-body">
         <section className="cashier-menu" aria-label="Menu">
-          {CATEGORIES.filter((c) => menu.some((d) => d.category === c)).map((c) => (
+          <div className="cashier-search">
+          <label htmlFor="cashier-search-input">Search drinks</label>
+          <input
+            id="cashier-search-input"
+            type="search"
+            placeholder="Type a drink name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button type="button" className="btn btn-small" onClick={() => setSearch("")}>Clear</button>
+          )}
+          </div>
+          <p className="muted" role="status">
+            {query && visibleMenu.length === 0 ? `No drinks match "${search.trim()}".` : ""}
+          </p>
+          {CATEGORIES.filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
             <div key={c} className="cashier-category">
               <h2>{c}</h2>
               <div className="cashier-grid">
-                {menu
+                {visibleMenu
                   .filter((d) => d.category === c)
                   .map((drink) => (
                     <button key={drink.id} className="cashier-item" onClick={() => setCustomizing(drink)}>

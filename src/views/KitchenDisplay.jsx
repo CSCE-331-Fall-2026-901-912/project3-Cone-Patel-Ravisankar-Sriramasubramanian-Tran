@@ -15,7 +15,12 @@ export default function KitchenDisplay() {
   const [tab, setTab] = useState("active"); // "active" or "history"
   const [now, setNow] = useState(Date.now());
   const [sortBy, setSortBy] = useState("longest");
-  const sortedOrders = [...orders].sort((a, b) => {
+  const [statusFilter, setStatusFilter] = useState("all");
+  const filteredOrders = orders.filter((order) => {
+    if (statusFilter === "all") return true;
+    return order.status === statusFilter;
+  });
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
     const aTime = new Date(a.placedAt).getTime();
     const bTime = new Date(b.placedAt).getTime();
 
@@ -83,25 +88,48 @@ export default function KitchenDisplay() {
         </nav>
 
         {tab === "active" && (
-          <div className="kitchen-sort">
-            <label htmlFor="kitchen-sort-select">Sort orders by:</label>
-            <select
-              id="kitchen-sort-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="longest">Longest Waiting Time</option>
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-            </select>
+          <div className="kitchen-controls">
+            <div className="kitchen-filter">
+              <label htmlFor="kitchen-status-filter">
+                Filter by status:
+              </label>
+
+              <select
+                id="kitchen-status-filter"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Active</option>
+                <option value="new">New</option>
+                <option value="in-progress">In Progress</option>
+              </select>
+            </div>
+
+            <div className="kitchen-sort">
+              <label htmlFor="kitchen-sort-select">
+                Sort orders by:
+              </label>
+
+              <select
+                id="kitchen-sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="longest">Longest Waiting Time</option>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+              </select>
+            </div>
           </div>
         )}
       </div>
 
       {tab === "history" ? (
         <KitchenHistory />
-      ) : orders.length === 0 ? (
-        <p className="kitchen-empty">No orders right now. New orders from the kiosk and cashier appear here automatically.</p>
+      ) : filteredOrders.length === 0 ? (
+        <p className="kitchen-empty">
+          No orders match the selected status.
+        </p>
       ) : (
         <section className="ticket-grid" aria-label="Open orders" aria-live="polite">
           {sortedOrders.map((order) => (

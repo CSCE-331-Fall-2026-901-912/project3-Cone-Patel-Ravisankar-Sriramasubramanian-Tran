@@ -2,7 +2,7 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import { testDatabaseConnection } from "./db.js";
+import { pool, testDatabaseConnection } from "./db.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -34,6 +34,32 @@ app.get("/api/health/database", async (req, res) => {
     res.status(503).json({
       status: "disconnected",
       message: "Unable to connect to PostgreSQL",
+    });
+  }
+});
+
+// GET /api/menu - Retrieve all menu items
+app.get("/api/menu", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        menu_id,
+        item_name,
+        category,
+        price,
+        availability
+      FROM menu
+      ORDER BY category, item_name
+    `);
+
+    res.json({
+      items: result.rows,
+    });
+  } catch (error) {
+    console.error("Failed to fetch menu:", error.message);
+
+    res.status(500).json({
+      error: "Unable to retrieve menu items",
     });
   }
 });

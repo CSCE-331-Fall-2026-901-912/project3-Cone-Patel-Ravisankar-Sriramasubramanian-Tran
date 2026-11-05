@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getActiveOrders, getRecentlyReady, getCompletedOrders, updateStatus, ORDER_KEYS } from "../data/orders.js";
 import { useLive } from "../data/store.js";
 import KitchenHistory from "../components/KitchenHistory.jsx";
@@ -13,6 +13,102 @@ export default function KitchenDisplay() {
     (order) => order.status === "in-progress"
   ).length;
   const [tab, setTab] = useState("active"); // "active" or "history"
+  
+  // SCRUM-46: Kitchen sound notifications
+  const [soundEnabled, setSoundEnabled] = useState(
+  () => localStorage.getItem("kitchenSoundEnabled") === "true"
+);
+  const audioContextRef = useRef(null);
+  const previousOrdersRef = useRef(null);
+
+  // Enable or disable notification sounds.
+  
+async function toggleSound() {
+  if (soundEnabled) {
+    setSoundEnabled(false);
+    localStorage.setItem("kitchenSoundEnabled", "false");
+    return;
+  }
+
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    alert("Sound notifications are not supported in this browser.");
+    return;
+  }
+
+  try {
+    const context = audioContextRef.current || new AudioContextClass();
+    audioContextRef.current = context;
+
+    await context.resume();
+
+    setSoundEnabled(true);
+    localStorage.setItem("kitchenSoundEnabled", "true");
+  } catch (error) {
+    console.error("Could not enable kitchen sound:", error);
+    alert("Could not enable sound notifications.");
+  }
+}
+
+
+  // Play a short two-tone notification.
+  function playNotification() {
+    const context = audioContextRef.current;
+
+    if (!context || context.state !== "running") return;
+
+    [0, 0.18].forEach((delay) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const start = context.currentTime + delay;
+
+      oscillator.type = "sine";
+      oscillator.frequency.value = 850;
+
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.15, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.14);
+
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+
+      oscillator.start(start);
+      oscillator.stop(start + 0.15);
+    });
+  }
+
+  // Detect newly arriving orders.
+  useEffect(() => {
+    const currentOrders = new Set(orders.map((order) => order.number));
+
+    // On first load, remember existing orders without making a sound.
+    if (previousOrdersRef.current === null) {
+      previousOrdersRef.current = currentOrders;
+      return;
+    }
+
+    const hasNewOrder = orders.some(
+      (order) =>
+        order.status === "new" &&
+        !previousOrdersRef.current.has(order.number)
+    );
+
+    if (hasNewOrder && soundEnabled) {
+      playNotification();
+    }
+
+    previousOrdersRef.current = currentOrders;
+  }, [orders, soundEnabled]);
+
+  // Release audio resources when the kitchen component closes.
+  useEffect(() => {
+    return () => {
+      audioContextRef.current?.close();
+    };
+  }, []);
+
   const [now, setNow] = useState(Date.now());
   const [sortBy, setSortBy] = useState("longest");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -44,12 +140,25 @@ export default function KitchenDisplay() {
 
   return (
     <div className="kitchen">
-      <header className="kitchen-header">
-        <h1>Kitchen Display</h1>
-        <p>
-          {orders.length} open {orders.length === 1 ? "order" : "orders"}
-        </p>
-      </header>
+      
+<header className="kitchen-header">
+  <div>
+    <h1>Kitchen Display</h1>
+    <p>
+      {orders.length} open {orders.length === 1 ? "order" : "orders"}
+    </p>
+  </div>
+
+  <button
+    className="btn"
+    type="button"
+    onClick={toggleSound}
+    aria-pressed={soundEnabled}
+  >
+    {soundEnabled ? "🔔 Sound On" : "🔕 Enable Sound"}
+  </button>
+</header>
+
       <section className="kitchen-summary" aria-label="Kitchen order summary">
         <div className="kitchen-summary-card">
           <span className="kitchen-summary-label">Total Open</span>

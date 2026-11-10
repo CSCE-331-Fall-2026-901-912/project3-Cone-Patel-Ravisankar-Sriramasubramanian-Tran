@@ -7,6 +7,7 @@ import inventoryRoutes from "./routes/inventory.js";
 import session from "express-session";
 import authRoutes from "./routes/auth.js";
 import connectPgSimple from "connect-pg-simple";
+import ordersRouter from "./routes/orders.js";
 
 const app = express();
 
@@ -170,7 +171,7 @@ app.get("/", (req, res) => {
     </html>
   `);
 });
-
+app.use("/api/orders", ordersRouter);
 app.listen(PORT, () => {
   console.log(`Boba Bliss API running on port ${PORT}`);
 });

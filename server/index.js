@@ -121,6 +121,56 @@ function requireTrustedOrigin(req, res, next) {
 app.use("/api/auth/logout", requireTrustedOrigin);
 app.use("/api/auth", authRoutes);
 
+app.get("/", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Boba Bliss API</title>
+        <style>
+          body {
+            font-family: system-ui, sans-serif;
+            max-width: 650px;
+            margin: 80px auto;
+            padding: 0 24px;
+            background: #faf7f2;
+            color: #44352e;
+          }
+          h1 { color: #674936; }
+          a { color: #8a6045; }
+          li { margin: 18px 0; }
+        </style>
+      </head>
+      <body>
+        <h1>Boba Bliss API</h1>
+        <p>Backend service is running.</p>
+        <h2>Available Endpoints</h2>
+        <ul>
+          <li>
+            <a href="/api/health/database">Database Health</a>
+            — Check PostgreSQL connection
+          </li>
+          <li>
+            <a href="/api/auth/google">Google Login</a>
+            — Start Google authentication
+          </li>
+          <li>
+            <a href="/api/auth/me">Current Session</a>
+            — Check logged-in user
+          </li>
+        </ul>
+        <p>
+          <a href="https://boba-bliss.onrender.com">
+            Open Boba Bliss Frontend
+          </a>
+        </p>
+      </body>
+    </html>
+  `);
+});
+
 app.listen(PORT, () => {
   console.log(`Boba Bliss API running on port ${PORT}`);
 });

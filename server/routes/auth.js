@@ -63,7 +63,7 @@ router.get("/google/callback", async (req, res, next) => {
 
     const currentUrl = new URL(
       req.originalUrl,
-      process.env.GOOGLE_REDIRECT_URI
+      new URL(process.env.GOOGLE_REDIRECT_URI).origin
     );
 
     const tokens = await oidc.authorizationCodeGrant(

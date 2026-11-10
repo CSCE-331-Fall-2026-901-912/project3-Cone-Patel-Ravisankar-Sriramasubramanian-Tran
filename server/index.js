@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import { pool, testDatabaseConnection } from "./db.js";
+import inventoryRoutes from "./routes/inventory.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -63,6 +64,8 @@ app.get("/api/menu", async (req, res) => {
     });
   }
 });
+
+app.use("/api/inventory", inventoryRoutes);
 
 app.listen(PORT, () => {
   console.log(`Boba Bliss API running on port ${PORT}`);

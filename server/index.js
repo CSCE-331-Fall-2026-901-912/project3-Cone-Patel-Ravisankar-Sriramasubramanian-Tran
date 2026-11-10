@@ -102,6 +102,23 @@ app.use(
   })
 );
 
+
+function requireTrustedOrigin(req, res, next) {
+  const allowedOrigin =
+    process.env.CLIENT_ORIGIN || "http://localhost:5173";
+
+  const origin = req.get("Origin");
+
+  if (origin !== allowedOrigin) {
+    return res.status(403).json({
+      error: "Forbidden origin",
+    });
+  }
+
+  next();
+}
+
+app.use("/api/auth/logout", requireTrustedOrigin);
 app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {

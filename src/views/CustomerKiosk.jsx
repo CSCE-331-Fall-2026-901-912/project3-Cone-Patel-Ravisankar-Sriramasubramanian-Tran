@@ -18,12 +18,12 @@ useEffect(() => {
 
   async function fetchMenu() {
     try {
-          const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "";
+      const API_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-const response = await fetch(`${API_BASE_URL}/api/menu`, {
-  signal: controller.signal,
-});
+      const response = await fetch(`${API_URL}/api/menu`, {
+        signal: controller.signal,
+      });
 
       if (!response.ok) {
         throw new Error("Failed to load menu");

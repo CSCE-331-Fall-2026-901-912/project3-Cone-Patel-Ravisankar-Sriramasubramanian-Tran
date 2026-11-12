@@ -18,9 +18,9 @@ useEffect(() => {
 
   async function fetchMenu() {
     try {
-      const response = await fetch("http://localhost:3001/api/menu", {
-        signal: controller.signal,
-      });
+          const response = await fetch("/api/menu", {
+      signal: controller.signal,
+    });
 
       if (!response.ok) {
         throw new Error("Failed to load menu");

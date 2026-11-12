@@ -1,14 +1,67 @@
-import { useState } from "react";
-import { SHOP_NAME, CATEGORIES, getActiveMenu, MENU_KEYS } from "../data/menu.js";
+import { useEffect, useState } from "react";
+import { SHOP_NAME } from "../data/menu.js";
 import { placeOrder, itemPrice, orderTotals } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
 import OrderReview from "../components/OrderReview.jsx";
 
 export default function CustomerKiosk() {
-  const menu = useLive(getActiveMenu, MENU_KEYS);
-  const categories = CATEGORIES.filter((c) => menu.some((d) => d.category === c));
-  const [category, setCategory] = useState(categories[0]);
+  const [menu, setMenu] = useState([]);
+const [category, setCategory] = useState("");
+const [loading, setLoading] = useState(true);
+const [menuError, setMenuError] = useState("");
+
+const categories = [...new Set(menu.map((drink) => drink.category))];
+
+useEffect(() => {
+  const controller = new AbortController();
+
+  async function fetchMenu() {
+    try {
+      const response = await fetch("http://localhost:3001/api/menu", {
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to load menu");
+      }
+
+      const data = await response.json();
+
+      // Convert PostgreSQL fields to the format used by the kiosk.
+      const formattedMenu = data.items
+        .filter((item) => item.availability)
+        .map((item) => ({
+          id: item.menu_id,
+          name: item.item_name,
+          category: item.category,
+          price: Number(item.price),
+          active: item.availability,
+        }));
+
+      setMenu(formattedMenu);
+
+      setCategory((current) =>
+        formattedMenu.some((item) => item.category === current)
+          ? current
+          : formattedMenu[0]?.category ?? ""
+      );
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("Menu API error:", error);
+        setMenuError("Unable to load menu. Please try again.");
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
+    }
+  }
+
+  fetchMenu();
+
+  return () => controller.abort();
+}, []);
   
   const [search, setSearch] = useState("");
 
@@ -115,6 +168,9 @@ export default function CustomerKiosk() {
           </p>
         )}
       </div>
+
+      {loading && <p role="status">Loading menu...</p>}
+      {menuError && <p role="alert">{menuError}</p>}
 
 
       <nav className="category-tabs" aria-label="Menu categories">

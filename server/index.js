@@ -8,6 +8,7 @@ import session from "express-session";
 import authRoutes from "./routes/auth.js";
 import connectPgSimple from "connect-pg-simple";
 import ordersRouter from "./routes/orders.js";
+import imagesRouter from "./routes/images.js";
 
 const app = express();
 
@@ -76,7 +77,7 @@ app.get("/api/menu", async (req, res) => {
 });
 
 app.use("/api/inventory", inventoryRoutes);
-
+app.use("/api/images", imagesRouter);
 const PgSession = connectPgSimple(session);
 
 if (!process.env.SESSION_SECRET) {

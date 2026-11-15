@@ -7,14 +7,208 @@ import OrderReview from "../components/OrderReview.jsx";
 
 export default function CustomerKiosk() {
   const [menu, setMenu] = useState([]);
-const [category, setCategory] = useState("");
-const [loading, setLoading] = useState(true);
-const [menuError, setMenuError] = useState("");
-const [drinkImages, setDrinkImages] = useState({});
-const [search, setSearch] = useState("");
-const requestedImages = useRef(new Set());
+  const [category, setCategory] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [menuError, setMenuError] = useState("");
+  const [drinkImages, setDrinkImages] = useState({});
+  const [search, setSearch] = useState("");
+  const [language, setLanguage] = useState("EN");
+  const [translations, setTranslations] = useState({});
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const requestedImages = useRef(new Set());
 
-const categories = [...new Set(menu.map((drink) => drink.category))];
+  const categories = [...new Set(menu.map((drink) => drink.category))];
+
+  // Display translated text when available.
+  // Keep the original English text as a fallback.
+  function t(text) {
+    if (language === "EN") return text;
+
+    return translations[language]?.[text] || text;
+  }
+
+  // Fetch translations when the selected language changes.
+useEffect(() => {
+  if (language === "EN" || menu.length === 0) {
+    setTranslationLoading(false);
+    return;
+  }
+
+  let cancelled = false;
+
+  const API_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+  // All text we want to translate.
+  const texts = [
+    // Header and search
+    "Tap a drink to customize it",
+    "Language:",
+    "Search drinks",
+    "Search for Taro, Mango, Milk Tea...",
+    "Clear",
+    "drink",
+    "drinks",
+    "found",
+    "Loading menu...",
+    "No drinks found. Try another search or clear your search.",
+
+    // Cart
+    "Your Order",
+    "No drinks yet.",
+    "Remove",
+    "Subtotal",
+    "Tax",
+    "Total",
+    "Review Order",
+
+    // Customization popup
+
+    "Size",
+    "Regular",
+    "Large",
+    "Sugar",
+    "Ice",
+    "No Ice",
+    "Less Ice",
+    "Regular Ice",
+    "Extra Ice",
+    "Toppings (choose any)",
+    "Boba",
+    "Lychee Jelly",
+    "Pudding",
+    "Cheese Foam",
+    "Red Bean",
+    "Quantity",
+    "Decrease quantity",
+    "Increase quantity",
+    "Cancel",
+    "Add to Order",
+    "sugar",
+
+    // Review Order page
+    "Review Your Order",
+    "Check your drinks before you place your order.",
+    "Your order is empty.",
+    "Back to Menu",
+    "Drinks in your order",
+    "each",
+    "Summary",
+    "Confirm & Place Order",
+    "Quantity of",
+    "Decrease quantity of",
+    "Increase quantity of",
+    "Order total",
+
+    // Confirmation page
+    "Thank you!",
+    "Your order number is",
+    "We'll call your number when your drinks are ready.",
+    "Start a new order",
+
+    // Menu categories and drink names
+    ...menu.map((drink) => drink.name),
+    ...menu.map((drink) => drink.category),
+  ];
+
+  const uniqueTexts = [...new Set(texts)];
+
+  async function fetchTranslations() {
+    setTranslationLoading(true);
+
+    try {
+      // Reuse translations already fetched.
+      const existing = translations[language] || {};
+
+      const missingTexts = uniqueTexts.filter(
+        (text) => !existing[text]
+      );
+
+      // Translate in small batches to avoid overwhelming DeepL.
+const successfulTranslations = [];
+let failedCount = 0;
+const batchSize = 5;
+
+for (let i = 0; i < missingTexts.length; i += batchSize) {
+  if (cancelled) return;
+
+  const batch = missingTexts.slice(i, i + batchSize);
+
+  const results = await Promise.allSettled(
+    batch.map(async (text) => {
+      const response = await fetch(`${API_URL}/api/translate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          targetLang: language,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Translation failed: ${text} (HTTP ${response.status})`
+        );
+      }
+
+      const data = await response.json();
+      return [text, data.translatedText];
+    })
+  );
+
+  const successful = results
+    .filter((result) => result.status === "fulfilled")
+    .map((result) => result.value);
+
+  successfulTranslations.push(...successful);
+
+  failedCount += results.filter(
+    (result) => result.status === "rejected"
+  ).length;
+
+  // Display successful translations as each batch finishes.
+  if (!cancelled && successful.length > 0) {
+    setTranslations((current) => ({
+      ...current,
+      [language]: {
+        ...current[language],
+        ...Object.fromEntries(successful),
+      },
+    }));
+  }
+}
+
+if (failedCount > 0) {
+  console.warn(`${failedCount} translations failed for ${language}`);
+}
+      if (cancelled) return;
+
+      setTranslations((current) => ({
+        ...current,
+        [language]: {
+          ...current[language],
+          ...Object.fromEntries(successfulTranslations),
+        },
+      }));
+    } catch (error) {
+      if (!cancelled) {
+        console.error("Translation API error:", error);
+      }
+    } finally {
+      if (!cancelled) {
+        setTranslationLoading(false);
+      }
+    }
+  }
+
+  fetchTranslations();
+
+  return () => {
+    cancelled = true;
+  };
+}, [language, menu]);
 
 useEffect(() => {
   const controller = new AbortController();
@@ -182,39 +376,67 @@ useEffect(() => {
         onRemove={removeFromCart}
         onBack={() => setReviewing(false)}
         onConfirm={checkout}
+        t={t}
       />
     );
   }
 
   if (confirmation) {
-    return (
-      <main className="kiosk kiosk-confirm">
-        <h1>Thank you!</h1>
-        <p>Your order number is</p>
-        <p className="order-number" aria-live="polite">#{confirmation}</p>
-        <p>We'll call your number when your drinks are ready.</p>
-        <button className="btn btn-primary btn-lg" onClick={() => setConfirmation(null)}>
-          Start a new order
-        </button>
-      </main>
-    );
-  }
+  return (
+    <main className="kiosk kiosk-confirm">
+      <h1>{t("Thank you!")}</h1>
+      <p>{t("Your order number is")}</p>
+
+      <p className="order-number" aria-live="polite">
+        #{confirmation}
+      </p>
+
+      <p>{t("We'll call your number when your drinks are ready.")}</p>
+
+      <button
+        className="btn btn-primary btn-lg"
+        onClick={() => setConfirmation(null)}
+      >
+        {t("Start a new order")}
+      </button>
+    </main>
+  );
+}
 
   return (
     <div className="kiosk">
       <header className="kiosk-header">
         <h1>{SHOP_NAME}</h1>
-        <p>Tap a drink to customize it</p>
+        <p>{t("Tap a drink to customize it")}</p>
+
+        <div className="kiosk-language">
+          <label htmlFor="kiosk-language-select">
+            {t("Language:")}
+          </label>
+
+          <select
+            id="kiosk-language-select"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+          >
+            <option value="EN">{t("English")}</option>
+            <option value="ES">{t("Español")}</option>
+            <option value="FR">{t("Français")}</option>
+            <option value="DE">{t("Deutsch")}</option>
+            <option value="JA">{t("日本語")}</option>
+            <option value="ZH">{t("中文")}</option>
+          </select>
+        </div>
       </header>
 
       <div className="kiosk-search">
-        <label htmlFor="kiosk-drink-search">Search drinks</label>
+        <label htmlFor="kiosk-drink-search">{t("Search drinks")}</label>
 
         <div className="kiosk-search-controls">
           <input
             id="kiosk-drink-search"
             type="search"
-            placeholder="Search for Taro, Mango, Milk Tea..."
+            placeholder={t("Search for Taro, Mango, Milk Tea...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -225,23 +447,23 @@ useEffect(() => {
               className="btn"
               onClick={() => setSearch("")}
             >
-              Clear
+              {t("Clear")}
             </button>
           )}
         </div>
 
         {searchTerm && (
           <p className="muted" role="status">
-            {filteredMenu.length} {filteredMenu.length === 1 ? "drink" : "drinks"} found
+            {filteredMenu.length} {t(filteredMenu.length === 1 ? "drink" : "drinks")} {t("found")}
           </p>
         )}
       </div>
 
-      {loading && <p role="status">Loading menu...</p>}
+      {loading && <p role="status">{t("Loading menu...")}</p>}
       {menuError && <p role="alert">{menuError}</p>}
 
 
-      <nav className="category-tabs" aria-label="Menu categories">
+      <nav className="category-tabs" aria-label={t("Menu categories")}>
         {categories.map((c) => (
           <button
             key={c}
@@ -249,7 +471,7 @@ useEffect(() => {
             aria-pressed={c === category}
             onClick={() => setCategory(c)}
           >
-            {c}
+            {t(c)}
           </button>
         ))}
       </nav>
@@ -257,7 +479,7 @@ useEffect(() => {
       <div className="kiosk-body">
         <section
           className="menu-grid"
-          aria-label={searchTerm ? "Drink search results" : `${category} drinks`}
+          aria-label={searchTerm ? t("Drink search results") : `${t(category)} ${t("drinks")}`}
         >
           {filteredMenu.map((drink) => (
 
@@ -284,7 +506,7 @@ useEffect(() => {
     </div>
 
     <div className="drink-card-info">
-      <span className="drink-name">{drink.name}</span>
+      <span className="drink-name">{t(drink.name)}</span>
       <span className="drink-price">{money(drink.price)}</span>
     </div>
   </button>
@@ -315,34 +537,34 @@ useEffect(() => {
 
           {filteredMenu.length === 0 && (
             <p className="kiosk-no-results">
-              No drinks found. Try another search or clear your search.
+              {t("No drinks found. Try another search or clear your search.")}
             </p>
           )}
 
         </section>
 
-        <aside className="cart" aria-label="Your order">
-          <h2>Your Order</h2>
+        <aside className="cart" aria-label={t("Your order")}>
+          <h2>{t("Your Order")}</h2>
           {cart.length === 0 ? (
-            <p className="muted">No drinks yet.</p>
+            <p className="muted">{t("No drinks yet.")}</p>
           ) : (
             <ul className="cart-list">
               {cart.map((item) => (
                 <li key={item.cartId} className="cart-item">
                   <div>
                     <strong>
-                      {item.quantity} × {item.name}
+                      {item.quantity} × {t(item.name)}
                     </strong>
-                    <div className="muted small">{itemSummary(item)}</div>
+                    <div className="muted small">{itemSummary(item, t)}</div>
                   </div>
                   <div className="cart-item-right">
                     <span>{money(itemPrice(item))}</span>
                     <button
                       className="btn-link"
                       onClick={() => removeFromCart(item.cartId)}
-                      aria-label={`Remove ${item.name}`}
+                      aria-label={`${t("Remove")} ${t(item.name)}`}
                     >
-                      Remove
+                      {t("Remove")}
                     </button>
                   </div>
                 </li>
@@ -350,20 +572,27 @@ useEffect(() => {
             </ul>
           )}
           <div className="cart-lines">
-            <div><span>Subtotal</span><span>{money(subtotal)}</span></div>
-            <div><span>Tax</span><span>{money(tax)}</span></div>
+            <div><span>{t("Subtotal")}</span><span>{money(subtotal)}</span></div>
+            <div><span>{t("Tax")}</span><span>{money(tax)}</span></div>
           </div>
           <div className="cart-total">
-            <span>Total</span>
+            <span>{t("Total")}</span>
             <span>{money(total)}</span>
           </div>
           <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => setReviewing(true)}>
-            Review Order
+            {t("Review Order")}
           </button>
         </aside>
       </div>
 
-      {customizing && <CustomizeDialog drink={customizing} onAdd={addToCart} onCancel={() => setCustomizing(null)} />}
+      {customizing && (
+  <CustomizeDialog
+    drink={customizing}
+    onAdd={addToCart}
+    onCancel={() => setCustomizing(null)}
+    t={t}
+  />
+)}
     </div>
   );
 }

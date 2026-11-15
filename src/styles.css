@@ -1960,3 +1960,40 @@ h1, h2, .hub-card-title {
   color: inherit;
   text-decoration: underline;
 }
+
+
+/* Position language selector in top-right of kiosk header */
+.kiosk-header {
+  position: relative;
+}
+
+.kiosk-language {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kiosk-language label {
+  font-size: 14px;
+}
+
+.kiosk-language select {
+  padding: 8px 12px;
+  border: 1px solid #d9b7a9;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+/* Keep selector usable on smaller screens */
+@media (max-width: 600px) {
+  .kiosk-language {
+    position: static;
+    justify-content: center;
+    margin-top: 12px;
+  }
+}

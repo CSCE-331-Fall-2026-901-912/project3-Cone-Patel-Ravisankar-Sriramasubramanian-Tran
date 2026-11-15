@@ -4,7 +4,13 @@ import { itemPrice } from "../data/orders.js";
 import { money } from "../data/store.js";
 
 // Size / sugar / ice / toppings / quantity picker, shared by the Kiosk and Cashier.
-export default function CustomizeDialog({ drink, onAdd, onCancel, compact = false }) {
+export default function CustomizeDialog({
+  drink,
+  onAdd,
+  onCancel,
+  compact = false,
+  t = (text) => text,
+}) {
   const [size, setSize] = useState(SIZES[0]);
   const [sugar, setSugar] = useState("100%");
   const [ice, setIce] = useState("Regular Ice");
@@ -20,60 +26,64 @@ export default function CustomizeDialog({ drink, onAdd, onCancel, compact = fals
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="customize-title">
       <div className={`dialog ${compact ? "dialog-compact" : ""}`}>
-        <h2 id="customize-title">{drink.name}</h2>
+        <h2 id="customize-title">{t(drink.name)}</h2>
 
-        <OptionGroup label="Size">
+        <OptionGroup label={t("Size")}>
           {SIZES.map((s) => (
             <Choice key={s.label} selected={size.label === s.label} onClick={() => setSize(s)}>
-              {s.label}
+              {t(s.label)}
               {s.extra > 0 && ` (+${money(s.extra)})`}
             </Choice>
           ))}
         </OptionGroup>
 
-        <OptionGroup label="Sugar">
+        <OptionGroup label={t("Sugar")}>
           {SUGAR_LEVELS.map((s) => (
             <Choice key={s} selected={sugar === s} onClick={() => setSugar(s)}>
-              {s}
+              {t(s)}
             </Choice>
           ))}
         </OptionGroup>
 
-        <OptionGroup label="Ice">
+        <OptionGroup label={t("Ice")}>
           {ICE_LEVELS.map((i) => (
             <Choice key={i} selected={ice === i} onClick={() => setIce(i)}>
-              {i}
+              {t(i)}
             </Choice>
           ))}
         </OptionGroup>
 
-        <OptionGroup label="Toppings (choose any)">
-          {TOPPINGS.map((t) => (
-            <Choice key={t.name} selected={toppings.some((x) => x.name === t.name)} onClick={() => toggleTopping(t)}>
-              {t.name} (+{money(t.price)})
+        <OptionGroup label={t("Toppings (choose any)")}>
+          {TOPPINGS.map((topping) => (
+            <Choice
+              key={topping.name}
+              selected={toppings.some((x) => x.name === topping.name)}
+              onClick={() => toggleTopping(topping)}
+            >
+              {t(topping.name)} (+{money(topping.price)})
             </Choice>
           ))}
         </OptionGroup>
 
         <div className="qty-row">
-          <span className="option-label">Quantity</span>
-          <button className="btn qty-btn" aria-label="Decrease quantity" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+          <span className="option-label">{t("Quantity")}</span>
+          <button className="btn qty-btn" aria-label={t("Decrease quantity")} onClick={() => setQuantity(Math.max(1, quantity - 1))}>
             −
           </button>
           <span className="qty" aria-live="polite">
             {quantity}
           </span>
-          <button className="btn qty-btn" aria-label="Increase quantity" onClick={() => setQuantity(quantity + 1)}>
+          <button className="btn qty-btn" aria-label={t("Increase quantity")} onClick={() => setQuantity(quantity + 1)}>
             +
           </button>
         </div>
 
         <div className="dialog-actions">
           <button className="btn" onClick={onCancel}>
-            Cancel
+            {t("Cancel")}
           </button>
           <button className="btn btn-primary" onClick={() => onAdd(item)}>
-            Add to Order · {money(itemPrice(item))}
+            {t("Add to Order")} · {money(itemPrice(item))}
           </button>
         </div>
       </div>
@@ -99,7 +109,13 @@ function Choice({ selected, onClick, children }) {
 }
 
 // One line per cart item, shared by the Kiosk and Cashier order panels.
-export function itemSummary(item) {
-  const parts = [item.size.label, `${item.sugar} sugar`, item.ice, ...item.toppings.map((t) => t.name)];
+export function itemSummary(item, t = (text) => text) {
+  const parts = [
+    t(item.size.label),
+    `${item.sugar} ${t("sugar")}`,
+    t(item.ice),
+    ...item.toppings.map((topping) => t(topping.name)),
+  ];
+
   return parts.join(" · ");
 }

@@ -1384,7 +1384,7 @@ h1, h2, .hub-card-title {
 }
 .cashier-menu > p.muted:empty {
   display: none;
-
+}
 /* Kitchen order completion confirmation */
 
 .kitchen-confirm-overlay {

@@ -60,7 +60,18 @@ async function fetchForecast() {
   const timer = setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch(`${FORECAST_URL}?${params}`, { signal: controller.signal });
-    if (!response.ok) throw new Error(`Open-Meteo responded with ${response.status}`);
+    if (!response.ok) {
+      const errorBody = await response.text();
+      const retryAfter = response.headers.get("retry-after");
+
+      console.error("Open-Meteo error details:", {
+        status: response.status,
+        retryAfter,
+        body: errorBody.slice(0, 500)
+      });
+
+      throw new Error(`Open-Meteo responded with ${response.status}`);
+    }
     const raw = await response.json();
 
     const temperature = Math.round(raw.current.temperature_2m);

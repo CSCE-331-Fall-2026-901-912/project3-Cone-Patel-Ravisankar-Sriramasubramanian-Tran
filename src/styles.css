@@ -1997,3 +1997,5 @@ h1, h2, .hub-card-title {
     margin-top: 12px;
   }
 }
+
+.clock-in-out { display: flex; align-items: center; gap: 0.5rem; }

@@ -1383,13 +1383,8 @@ h1, h2, .hub-card-title {
   outline: none;
 }
 .cashier-menu > p.muted:empty {
-<<<<<<< HEAD
   display: none;
 }
-=======
-  display: none;}
-
->>>>>>> origin/main
 /* Kitchen order completion confirmation */
 
 .kitchen-confirm-overlay {

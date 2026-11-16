@@ -4,8 +4,9 @@ import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS } from "../data/inventory.js";
 import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
 import { useLive, money } from "../data/store.js";
+import ShiftReport from "../components/ShiftReport.jsx";
 
-const TABS = ["Overview", "Reports", "Orders", "Menu", "Inventory", "Employees"];
+const TABS = ["Overview", "Reports", "Orders", "Menu", "Inventory", "Employees", "Shifts"];
 
 export default function ManagerDashboard() {
   const [tab, setTab] = useState("Overview");
@@ -34,6 +35,7 @@ export default function ManagerDashboard() {
         {tab === "Menu" && <MenuTab />}
         {tab === "Inventory" && <InventoryTab />}
         {tab === "Employees" && <EmployeesTab />}
+        {tab === "Shifts" && <ShiftReport />}
       </main>
     </div>
   );

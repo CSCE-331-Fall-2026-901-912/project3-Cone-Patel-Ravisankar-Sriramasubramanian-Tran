@@ -2071,3 +2071,23 @@ h1, h2, .hub-card-title {
   .report-chart-grid { grid-template-columns: 1fr; }
   .revenue-value { font-size: 0.63rem; }
 }
+
+/* Manager inventory restock history */
+.restock-history {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #e6cfc2;
+  border-radius: 1rem;
+  background: #fffdfa;
+}
+.restock-history-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.restock-history-heading h2 { margin: 0 0 0.4rem; }
+.restock-history-heading label { display: grid; gap: 0.35rem; }
+.restock-error { color: #a22626; font-weight: 600; }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
 import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
-import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS } from "../data/inventory.js";
+import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
 import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
 import { useLive, money } from "../data/store.js";
 
@@ -1008,6 +1008,9 @@ function LocalMenuTab() {
 
 function InventoryTab() {
   const inventory = useLive(getInventory, INVENTORY_KEYS);
+  const restockHistory = useLive(getRestockHistory, RESTOCK_HISTORY_KEYS);
+  const [historySearch, setHistorySearch] = useState("");
+  const [restockError, setRestockError] = useState("");
   
   // Inventory search and low-stock filtering.
   const [search, setSearch] = useState("");
@@ -1061,16 +1064,17 @@ function InventoryTab() {
       return;
     }
 
-    // Add the entered amount to the existing stock.
-    updateInventoryItem(item.id, {
-      quantity: item.quantity + amount,
-    });
-
-    // Clear the input after restocking.
-    setRestockAmounts((prev) => ({
-      ...prev,
-      [item.id]: "",
-    }));
+    try {
+      restockInventoryItem(item.id, amount);
+      setRestockError("");
+      // Clear the input only after a successful restock.
+      setRestockAmounts((prev) => ({
+        ...prev,
+        [item.id]: "",
+      }));
+    } catch (error) {
+      setRestockError(error.message || "Unable to save restock.");
+    }
   }
 
 
@@ -1139,6 +1143,8 @@ function InventoryTab() {
         </p>
       )}
 
+      {restockError && <p role="alert" className="restock-error">{restockError}</p>}
+
       <div className="table-wrap">
         <table className="data-table">
           <thead>
@@ -1204,6 +1210,57 @@ function InventoryTab() {
           </tbody>
         </table>
       </div>
+
+      <section className="restock-history" aria-label="Inventory restock history">
+        <div className="restock-history-heading">
+          <div>
+            <h2>Restock history</h2>
+            <p className="muted">Records quantities added using the Restock button on this browser. Direct quantity edits are not tracked.</p>
+          </div>
+          <label>
+            Search history
+            <input
+              type="search"
+              placeholder="Filter by item"
+              value={historySearch}
+              onChange={(event) => setHistorySearch(event.target.value)}
+            />
+          </label>
+        </div>
+        {(() => {
+          const entries = restockHistory
+            .filter((entry) => entry.itemName.toLowerCase().includes(historySearch.trim().toLowerCase()))
+            .sort((a, b) => new Date(b.restockedAt) - new Date(a.restockedAt));
+          return entries.length === 0 ? (
+            <p className="muted">{restockHistory.length === 0 ? "No restocks recorded yet. Use Add in the Restock column to create the first entry." : "No restock history matches your search."}</p>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Date &amp; time</th>
+                    <th>Item</th>
+                    <th className="num">Added</th>
+                    <th className="num">Before</th>
+                    <th className="num">After</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>{new Date(entry.restockedAt).toLocaleString()}</td>
+                      <td>{entry.itemName}</td>
+                      <td className="num">+{entry.amount} {entry.unit}</td>
+                      <td className="num">{entry.previousQuantity}</td>
+                      <td className="num">{entry.newQuantity}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
+      </section>
     </>
   );
 }

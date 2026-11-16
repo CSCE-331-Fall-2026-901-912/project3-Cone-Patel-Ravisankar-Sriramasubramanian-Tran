@@ -70,7 +70,14 @@ async function fetchForecast() {
         body: errorBody.slice(0, 500)
       });
 
-      throw new Error(`Open-Meteo responded with ${response.status}`);
+      const error = new Error(
+        `Open-Meteo responded with ${response.status}`
+      );
+
+      error.status = response.status;
+      error.retryAfter = retryAfter;
+
+      throw error;
     }
     const raw = await response.json();
 
@@ -144,8 +151,16 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("Weather fetch failed:", error.message);
 
-    // Wait before attempting another request
-    retryAfter = Date.now() + RETRY_MS;
+    const retrySeconds = Number(error.retryAfter);
+
+    const cooldownMs =
+      error.status === 429 &&
+      Number.isFinite(retrySeconds) &&
+      retrySeconds > 0
+        ? Math.max(RETRY_MS, retrySeconds * 1000)
+        : RETRY_MS;
+
+    retryAfter = Date.now() + cooldownMs;
 
     if (cache) {
       return res.json({ ...cache.data, stale: true });

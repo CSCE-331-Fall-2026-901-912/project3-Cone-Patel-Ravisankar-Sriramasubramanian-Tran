@@ -7,6 +7,7 @@ import CashierScreen from "./views/CashierScreen.jsx";
 import CustomerKiosk from "./views/CustomerKiosk.jsx";
 import KitchenDisplay from "./views/KitchenDisplay.jsx";
 import AssistantChat from "./components/AssistantChat.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
   useEffect(() => {
@@ -20,10 +21,35 @@ export default function App() {
     <>
     <Routes>
       <Route path="/" element={<PortalHub />} />
-      <Route path="/manager" element={<ManagerDashboard />} />
-      <Route path="/cashier" element={<CashierScreen />} />
+
+      <Route
+        path="/manager"
+        element={
+          <ProtectedRoute allowedRoles={["manager"]}>
+            <ManagerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/cashier"
+        element={
+          <ProtectedRoute allowedRoles={["cashier", "manager"]}>
+            <CashierScreen />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/kiosk" element={<CustomerKiosk />} />
-      <Route path="/kitchen" element={<KitchenDisplay />} />
+
+      <Route
+        path="/kitchen"
+        element={
+          <ProtectedRoute allowedRoles={["kitchen", "manager"]}>
+            <KitchenDisplay />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
     <AssistantChat />
     </>

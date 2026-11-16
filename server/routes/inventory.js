@@ -1,4 +1,4 @@
-
+import { requireRole } from "../middleware/authorize.js";
 import { Router } from "express";
 import { pool } from "../db.js";
 
@@ -46,7 +46,7 @@ function validateItem(body) {
 }
 
 // GET all inventory items
-router.get("/", async (req, res) => {
+router.get("/", requireRole("manager", "cashier", "kitchen"), async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT ${fields}
@@ -62,7 +62,7 @@ router.get("/", async (req, res) => {
 });
 
 // GET low-stock items
-router.get("/low-stock", async (req, res) => {
+router.get("/low-stock", requireRole("manager", "cashier", "kitchen"), async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT ${fields}
@@ -80,7 +80,7 @@ router.get("/low-stock", async (req, res) => {
 });
 
 // GET one inventory item
-router.get("/:id", async (req, res) => {
+router.get("/:id", requireRole("manager", "cashier", "kitchen"), async (req, res) => {
   if (!validId(req.params.id)) {
     return res.status(400).json({ error: "Invalid inventory ID" });
   }
@@ -103,7 +103,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST new inventory item
-router.post("/", async (req, res) => {
+router.post("/", requireRole("manager"), async (req, res) => {
   if (!validateItem(req.body)) {
     return res.status(400).json({ error: "Invalid inventory item data" });
   }
@@ -133,7 +133,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT existing inventory item
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireRole("manager"), async (req, res) => {
   if (!validId(req.params.id)) {
     return res.status(400).json({ error: "Invalid inventory ID" });
   }

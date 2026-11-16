@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
 import { getAllOrders, ORDER_KEYS, itemPrice, netTotal } from "../data/orders.js";
+import RefundDialog from "../components/RefundDialog.jsx";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
 import EmployeesTab from "../components/EmployeesTab.jsx";
 import { useLive, money } from "../data/store.js";
@@ -509,6 +510,20 @@ function Orders() {
   // Keep track of the manager's search and filter selections.
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [refunding, setRefunding] = useState(null); // order number in the cancel/refund window
+  const [notice, setNotice] = useState("");
+
+  const refundingOrder = orders.find((o) => o.number === refunding);
+
+  function handleRefundDone(refund) {
+    setRefunding(null);
+    setNotice(
+      refund.type === "cancellation"
+        ? `Order #${refund.orderId} cancelled. ${money(refund.amount)} refunded.`
+        : `Refunded ${money(refund.amount)} for order #${refund.orderId}.`
+    );
+    window.setTimeout(() => setNotice(""), 6000);
+  }
 
   const searchTerm = search.trim().toLowerCase();
 
@@ -563,6 +578,7 @@ function Orders() {
             <option value="new">New</option>
             <option value="in-progress">In progress</option>
             <option value="ready">Ready</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </label>
 
@@ -579,6 +595,12 @@ function Orders() {
       <p className="muted" role="status">
         Showing {filteredOrders.length} of {orders.length} orders
       </p>
+
+      {notice && (
+        <p className="manager-notice" role="status">
+          {notice}
+        </p>
+      )}
 
       {filteredOrders.length === 0 ? (
         <p className="muted">
@@ -597,12 +619,15 @@ function Orders() {
                 <th>Payment</th>
                 <th className="num">Total</th>
                 <th>Status</th>
+                <th>
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {filteredOrders.map((o) => (
-                <tr key={o.number}>
+                <tr key={o.number} className={o.status === "cancelled" ? "row-cancelled" : ""}>
                   <td>#{o.number}</td>
                   <td>
                     {new Date(o.placedAt).toLocaleString([], {
@@ -620,21 +645,51 @@ function Orders() {
                       .join(", ")}
                   </td>
                   <td>{o.payment}</td>
-                  <td className="num">{money(o.total)}</td>
+                  <td className="num">
+                    {money(o.total)}
+                    {o.refund?.type === "refund" && (
+                      <span className="refund-note">−{money(o.refund.amount)} refunded</span>
+                    )}
+                  </td>
                   <td>
                     <span className={`status status-${o.status}`}>
                       {o.status === "in-progress"
                         ? "In progress"
                         : o.status === "ready"
                           ? "Ready"
-                          : "New"}
+                          : o.status === "cancelled"
+                            ? "Cancelled"
+                            : "New"}
                     </span>
+                  </td>
+                  <td className="order-actions-cell">
+                    {o.refund ? (
+                      <span
+                        className="muted small"
+                        title={`${o.refund.reason}${o.refund.employee ? ` · by ${o.refund.employee}` : ""}`}
+                      >
+                        {o.refund.type === "cancellation" ? "Cancelled" : "Refunded"}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => setRefunding(o.number)}
+                        aria-label={`Cancel or refund order ${o.number}`}
+                      >
+                        Cancel / Refund
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {refundingOrder && (
+        <RefundDialog order={refundingOrder} onClose={() => setRefunding(null)} onDone={handleRefundDone} />
       )}
     </>
   );

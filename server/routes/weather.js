@@ -12,8 +12,12 @@ const LOCATION = {
 };
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
-const CACHE_MS = 10 * 60 * 1000; // weather changes slowly; avoid calling the API on every page load
-let cache = null; // { data, fetchedAt }
+const CACHE_MS = 15 * 60 * 1000;
+const RETRY_MS = 15 * 60 * 1000;
+
+let cache = null;
+let pendingFetch = null;
+let retryAfter = 0;
 
 // WMO weather codes used by Open-Meteo -> readable label and icon.
 // https://open-meteo.com/en/docs#weathervariables
@@ -89,19 +93,56 @@ async function fetchForecast() {
 
 // GET /api/weather - current conditions, 5-day forecast, and a drink suggestion
 router.get("/", async (req, res) => {
-  if (cache && Date.now() - cache.fetchedAt < CACHE_MS) {
+  const now = Date.now();
+
+  // Return cached data if still fresh
+  if (cache && now - cache.fetchedAt < CACHE_MS) {
     return res.json({ ...cache.data, stale: false });
   }
 
+  // Don't retry while Open-Meteo is rate-limiting us
+  if (now < retryAfter) {
+    if (cache) {
+      return res.json({ ...cache.data, stale: true });
+    }
+
+    return res.status(503).json({
+      error: "Weather is temporarily unavailable"
+    });
+  }
+
   try {
-    const data = await fetchForecast();
-    cache = { data, fetchedAt: Date.now() };
-    res.json({ ...data, stale: false });
+    // Share one API request across simultaneous visitors
+    if (!pendingFetch) {
+      pendingFetch = fetchForecast().finally(() => {
+        pendingFetch = null;
+      });
+    }
+
+    const data = await pendingFetch;
+
+    cache = {
+      data,
+      fetchedAt: Date.now()
+    };
+
+    retryAfter = 0;
+
+    return res.json({ ...data, stale: false });
+
   } catch (error) {
     console.error("Weather fetch failed:", error.message);
-    // Serve the last good forecast rather than nothing if the API is briefly down.
-    if (cache) return res.json({ ...cache.data, stale: true });
-    res.status(502).json({ error: "Weather is unavailable right now" });
+
+    // Wait before attempting another request
+    retryAfter = Date.now() + RETRY_MS;
+
+    if (cache) {
+      return res.json({ ...cache.data, stale: true });
+    }
+
+    return res.status(502).json({
+      error: "Weather is unavailable right now"
+    });
   }
 });
 

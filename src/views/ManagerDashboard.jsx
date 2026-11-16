@@ -4,6 +4,7 @@ import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
 import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
 import { useLive, money } from "../data/store.js";
+import { WeatherForecast } from "../components/Weather.jsx";
 
 const TABS = ["Overview", "Reports", "Orders", "Menu", "Inventory", "Employees"];
 
@@ -104,6 +105,8 @@ function Overview() {
           )}
         </section>
       </div>
+
+      <WeatherForecast />
     </>
   );
 }

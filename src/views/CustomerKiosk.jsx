@@ -4,6 +4,7 @@ import { placeOrder, itemPrice, orderTotals } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
 import OrderReview from "../components/OrderReview.jsx";
+import { WeatherBanner } from "../components/Weather.jsx";
 
 export default function CustomerKiosk() {
   const [menu, setMenu] = useState([]);
@@ -99,6 +100,21 @@ useEffect(() => {
     "Decrease quantity of",
     "Increase quantity of",
     "Order total",
+
+    // Weather banner
+    "Today's weather",
+    "Clear",
+    "Partly cloudy",
+    "Cloudy",
+    "Foggy",
+    "Drizzle",
+    "Rain",
+    "Snow",
+    "Thunderstorms",
+    "Rainy day? Warm up with a cozy milk tea.",
+    "It's hot out! Cool off with an iced fruit tea.",
+    "Chilly today. A warm milk tea hits the spot.",
+    "Perfect weather for a classic milk tea.",
 
     // Confirmation page
     "Thank you!",
@@ -441,6 +457,8 @@ useEffect(() => {
           </select>
         </div>
       </header>
+
+      <WeatherBanner t={t} />
 
       <div className="kiosk-search">
         <label htmlFor="kiosk-drink-search">{t("Search drinks")}</label>

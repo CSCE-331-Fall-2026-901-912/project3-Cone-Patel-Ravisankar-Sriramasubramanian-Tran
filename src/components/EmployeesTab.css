@@ -1,0 +1,38 @@
+/* SCRUM-40: Manager Employees tab. */
+
+.employees-help {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.data-table .employees-email {
+  width: min(260px, 100%);
+  text-align: left;
+}
+
+.employees-you {
+  color: #896E61;
+  font-size: 0.9rem;
+}
+
+.employees-signin {
+  white-space: nowrap;
+}
+
+.employees-error {
+  margin: 0;
+  padding: 0.7rem 1rem;
+  background: #F9DEDB;
+  color: #A2301F;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.employees-success {
+  margin: 0;
+  padding: 0.7rem 1rem;
+  background: #E3F1E8;
+  color: #2F6B45;
+  border-radius: 10px;
+  font-weight: 700;
+}

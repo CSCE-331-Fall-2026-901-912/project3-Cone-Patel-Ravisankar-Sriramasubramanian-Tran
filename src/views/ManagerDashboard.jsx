@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
 import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
-import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
+import EmployeesTab from "../components/EmployeesTab.jsx";
 import { useLive, money } from "../data/store.js";
 import { WeatherForecast } from "../components/Weather.jsx";
 
@@ -1269,68 +1269,4 @@ function InventoryTab() {
 }
 
 /* ---------------- Employees ---------------- */
-
-function EmployeesTab() {
-  const employees = useLive(getEmployees, EMPLOYEE_KEYS);
-  const [form, setForm] = useState({ name: "", role: "Cashier" });
-
-  function submit(e) {
-    e.preventDefault();
-    if (!form.name.trim()) return;
-    addEmployee({ name: form.name.trim(), role: form.role });
-    setForm({ name: "", role: "Cashier" });
-  }
-
-  return (
-    <>
-      <form className="inline-form" onSubmit={submit} aria-label="Add employee">
-        <h2>Add an employee</h2>
-        <label>
-          Name
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        </label>
-        <label>
-          Role
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            {ROLES.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-        </label>
-        <button className="btn btn-primary">Add</button>
-      </form>
-
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((e) => (
-              <tr key={e.id} className={e.active ? "" : "row-off"}>
-                <td>{e.name}</td>
-                <td>
-                  <select className="cell-select" value={e.role} aria-label={`Role for ${e.name}`} onChange={(ev) => updateEmployee(e.id, { role: ev.target.value })}>
-                    {ROLES.map((r) => (
-                      <option key={r}>{r}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <label className="toggle">
-                    <input type="checkbox" checked={e.active} onChange={() => updateEmployee(e.id, { active: !e.active })} />
-                    {e.active ? "Yes" : "No"}
-                  </label>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
+// Employees tab lives in src/components/EmployeesTab.jsx (SCRUM-40).

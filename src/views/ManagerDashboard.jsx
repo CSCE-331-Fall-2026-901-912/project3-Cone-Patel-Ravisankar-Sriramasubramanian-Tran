@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
 import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS } from "../data/inventory.js";
@@ -640,7 +640,139 @@ function Orders() {
 
 /* ---------------- Menu ---------------- */
 
+// The database menu is read-only until menu write endpoints are implemented.
+// Keep the existing browser-local editor available, but clearly separate it
+// so that a local change cannot be mistaken for a PostgreSQL update.
 function MenuTab() {
+  const [view, setView] = useState("database");
+
+  return (
+    <>
+      <div className="order-filters" role="group" aria-label="Menu data source">
+        <button
+          type="button"
+          className={`btn ${view === "database" ? "btn-primary" : ""}`}
+          onClick={() => setView("database")}
+          aria-pressed={view === "database"}
+        >
+          Database menu
+        </button>
+        <button
+          type="button"
+          className={`btn ${view === "local" ? "btn-primary" : ""}`}
+          onClick={() => setView("local")}
+          aria-pressed={view === "local"}
+        >
+          Local menu editor
+        </button>
+      </div>
+      {view === "database" ? <DatabaseMenuTab /> : <LocalMenuTab />}
+    </>
+  );
+}
+
+function DatabaseMenuTab() {
+  const [menu, setMenu] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadDatabaseMenu() {
+      setLoading(true);
+      setError("");
+      try {
+        // Same API host and response format used by CustomerKiosk.jsx.
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+        const response = await fetch(`${apiUrl}/api/menu`, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Menu request failed (${response.status})`);
+        const data = await response.json();
+        if (!Array.isArray(data.items)) throw new Error("Unexpected menu response");
+        const items = data.items.map((item) => ({
+          id: item.menu_id,
+          name: String(item.item_name ?? ""),
+          category: String(item.category ?? ""),
+          price: Number(item.price),
+          active: item.availability === true || item.availability === 1 || item.availability === "true",
+        }));
+        if (!controller.signal.aborted) setMenu(items);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error("Unable to load database menu:", err);
+          setError("Unable to load menu from PostgreSQL. Make sure the backend is running and connected to the database.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    loadDatabaseMenu();
+    return () => controller.abort();
+  }, [reload]);
+
+  const term = search.trim().toLowerCase();
+  const filteredMenu = menu.filter((item) =>
+    item.name.toLowerCase().includes(term) || item.category.toLowerCase().includes(term)
+  );
+
+  return (
+    <section aria-label="PostgreSQL menu">
+      <h2>Database menu</h2>
+      <p className="muted">
+        These drinks are loaded from GET /api/menu. Viewing is database-backed;
+        adding, editing and deleting in PostgreSQL will need separate write endpoints.
+        The Local menu editor does not save changes to PostgreSQL.
+      </p>
+      <div className="order-filters">
+        <label>
+          Search database menu
+          <input
+            type="search"
+            placeholder="Search by drink or category"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+        <button type="button" className="btn" onClick={() => setReload((n) => n + 1)}>
+          Refresh menu
+        </button>
+      </div>
+      {loading ? (
+        <p role="status" className="muted">Loading menu from PostgreSQL…</p>
+      ) : error ? (
+        <p role="alert">{error}</p>
+      ) : (
+        <>
+          <p role="status" className="muted">
+            Showing {filteredMenu.length} of {menu.length} database drinks
+          </p>
+          {filteredMenu.length === 0 ? (
+            <p className="muted">{menu.length ? "No drinks match your search." : "No drinks in the database menu."}</p>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr><th>Drink</th><th>Category</th><th className="num">Price ($)</th><th>On menu</th></tr></thead>
+                <tbody>
+                  {filteredMenu.map((drink) => (
+                    <tr key={drink.id} className={drink.active ? "" : "row-off"}>
+                      <td>{drink.name}</td>
+                      <td>{drink.category}</td>
+                      <td className="num">{Number.isFinite(drink.price) ? money(drink.price) : "—"}</td>
+                      <td>{drink.active ? "Yes" : "No"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function LocalMenuTab() {
   const menu = useLive(getMenu, MENU_KEYS);
   const [form, setForm] = useState({ name: "", category: "Seasonal", price: "" });
 

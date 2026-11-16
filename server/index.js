@@ -13,6 +13,7 @@ import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
 import assistantRouter from "./routes/assistant.js";
 import weatherRouter from "./routes/weather.js";
+import employeesRouter from "./routes/employees.js";
 
 const app = express();
 
@@ -128,6 +129,7 @@ app.use("/api/images", imagesRouter);
 app.use("/api/translate", translateRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/weather", weatherRouter);
+app.use("/api/employees", employeesRouter);
 
 app.get("/", (req, res) => {
   res.send(`

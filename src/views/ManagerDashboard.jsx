@@ -203,6 +203,19 @@ function Reports() {
 
   const lowStock = inventory.filter(isLowStock);
 
+  // Aggregate orders by local calendar date for the selected seven-day period.
+  const revenueTrend = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(`${date}T12:00:00`);
+    day.setDate(day.getDate() - (6 - index));
+    const key = localDateKey(day.getTime());
+    const dayOrders = orders.filter((order) => localDateKey(order.placedAt) === key);
+    return {
+      date: key,
+      label: day.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      revenue: dayOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0),
+    };
+  });
+
   return (
     <>
       {/* Date selector */}
@@ -285,6 +298,21 @@ function Reports() {
           </table>
         </div>
       </section>
+
+      {/* Report visualizations: based on the same browser orders as the tables. */}
+      <div className="report-chart-grid">
+        <section className="panel" aria-label="Seven-day revenue chart">
+          <h2>Revenue trend (7 days)</h2>
+          <p className="muted">Seven days ending on the selected report date.</p>
+          <RevenueChart values={revenueTrend} />
+        </section>
+
+        <section className="panel" aria-label="Order channel chart">
+          <h2>Orders by channel</h2>
+          <p className="muted">Orders placed on the selected report date.</p>
+          <ChannelChart kiosk={kioskOrders.length} cashier={cashierOrders.length} />
+        </section>
+      </div>
 
       {/* Product sales report */}
       <section
@@ -408,6 +436,64 @@ function Reports() {
         until the shared database is connected.
       </p>
     </>
+  );
+}
+
+// Small, dependency-free charts; no charting library or backend is required.
+function RevenueChart({ values }) {
+  const maxRevenue = Math.max(1, ...values.map((value) => value.revenue));
+  const hasSales = values.some((value) => value.revenue > 0);
+
+  return (
+    <>
+      {!hasSales && <p className="muted">No sales recorded in this seven-day period.</p>}
+      <div
+        className="revenue-chart"
+        role="img"
+        aria-label={values.map((value) => `${value.label}: ${money(value.revenue)}`).join(", ")}
+      >
+        {values.map((value) => (
+          <div className="revenue-column" key={value.date}>
+            <span className="revenue-value">{money(value.revenue)}</span>
+            <div className="revenue-track">
+              <div
+                className="revenue-fill"
+                style={{ height: `${(value.revenue / maxRevenue) * 100}%` }}
+              />
+            </div>
+            <span className="revenue-label">{value.label}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ChannelChart({ kiosk, cashier }) {
+  const total = kiosk + cashier;
+  const kioskPercent = total ? Math.round((kiosk / total) * 100) : 0;
+  const cashierPercent = total ? 100 - kioskPercent : 0;
+
+  return (
+    <div className="channel-chart">
+      <div
+        className={`channel-donut ${total === 0 ? "channel-donut-empty" : ""}`}
+        role="img"
+        aria-label={`${kiosk} kiosk orders and ${cashier} cashier orders`}
+        style={total ? {
+          background: `conic-gradient(#aa6b48 0 ${kioskPercent}%, #d4bba4 ${kioskPercent}% 100%)`,
+        } : undefined}
+      >
+        <div className="channel-inner">
+          <strong>{total}</strong>
+          <span>orders</span>
+        </div>
+      </div>
+      <div className="channel-legend">
+        <p><span className="channel-swatch kiosk-swatch" /> Kiosk: {kiosk} ({kioskPercent}%)</p>
+        <p><span className="channel-swatch cashier-swatch" /> Cashier: {cashier} ({cashierPercent}%)</p>
+      </div>
+    </div>
   );
 }
 

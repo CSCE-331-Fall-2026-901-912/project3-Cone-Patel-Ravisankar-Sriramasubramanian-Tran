@@ -1,14 +1,28 @@
 import { useEffect, useState } from "react";
-import { CATEGORIES, getActiveMenu, MENU_KEYS } from "../data/menu.js";
+import { fetchMenu } from "../data/api.js";
 import { getEmployees, EMPLOYEE_KEYS } from "../data/employees.js";
 import { placeOrder, itemPrice, orderTotals, getActiveOrders, ORDER_KEYS } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
 
-// Built for speed: every drink on one screen, grouped by category,
-// with the current order always visible on the right.
+//built for speed: every drink on one screen, grouped by category
+//with the current order always visible on the right
 export default function CashierScreen() {
-  const menu = useLive(getActiveMenu, MENU_KEYS);
+  const [menu, setMenu] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState("");
+
+  //load the live menu from the backend
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchMenu(controller.signal)
+      .then(setMenu)
+      .catch((err) => err.name !== "AbortError" && setMenuError(err.message))
+      .finally(() => setMenuLoading(false));
+    return () => controller.abort();
+  }, []);
+
+  const categories = [...new Set(menu.map((d) => d.category))];
   const employees = useLive(getEmployees, EMPLOYEE_KEYS).filter((e) => e.active);
   const openOrders = useLive(getActiveOrders, ORDER_KEYS);
 
@@ -97,7 +111,9 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
           <p className="muted" role="status">
             {query && visibleMenu.length === 0 ? `No drinks match "${search.trim()}".` : ""}
           </p>
-          {CATEGORIES.filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
+          {menuLoading && <p className="muted" role="status">Loading menu...</p>}
+          {menuError && <p className="muted" role="alert">{menuError}</p>}
+          {categories.filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
             <div key={c} className="cashier-category">
               <h2>{c}</h2>
               <div className="cashier-grid">

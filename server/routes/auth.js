@@ -1,4 +1,5 @@
 import { pool } from "../db.js";
+import { linkEmployeeAccount } from "./employees.js";
 import { Router } from "express";
 import * as oidc from "openid-client";
 
@@ -122,6 +123,10 @@ router.get("/google/callback", async (req, res, next) => {
       VALUES ($1)`,
       [account.rows[0].account_id]
     );
+
+    // SCRUM-40: If a manager added this person's email on the Employees tab,
+    // connect this Google account to that employee so they get their role.
+    await linkEmployeeAccount(account.rows[0].account_id, user.email);
 
     const employee = await getEmployeeRole(user.googleId);
 

@@ -26,3 +26,9 @@ export async function fetchMenu(signal) {
       active: item.availability,
     }));
 }
+
+// GET /api/shifts/employees, converted to the shape the UI uses.
+export async function fetchEmployees() {
+  const data = await apiJson("/api/shifts/employees");
+  return data.employees.map((e) => ({ id: e.employee_id, name: e.employee_name, role: e.role }));
+}

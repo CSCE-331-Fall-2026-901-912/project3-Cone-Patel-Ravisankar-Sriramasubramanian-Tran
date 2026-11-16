@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchMenu } from "../data/api.js";
-import { getEmployees, EMPLOYEE_KEYS } from "../data/employees.js";
+import { fetchMenu, fetchEmployees } from "../data/api.js";
 import { placeOrder, itemPrice, orderTotals, getActiveOrders, ORDER_KEYS } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
@@ -24,10 +23,22 @@ export default function CashierScreen() {
   }, []);
 
   const categories = [...new Set(menu.map((d) => d.category))];
-  const employees = useLive(getEmployees, EMPLOYEE_KEYS).filter((e) => e.active);
+  const [employees, setEmployees] = useState([]);
+  const [employeeError, setEmployeeError] = useState("");
+
+  //load the real employees from the database for the cashier dropdown.
+  useEffect(() => {
+    fetchEmployees()
+      .then((list) => {
+        setEmployees(list);
+        setEmployeeId((current) => current || list[0]?.id || "");
+      })
+      .catch((err) => setEmployeeError(err.message));
+  }, []);
+
   const openOrders = useLive(getActiveOrders, ORDER_KEYS);
 
-  const [employeeId, setEmployeeId] = useState(employees[0]?.id ?? "");
+  const [employeeId, setEmployeeId] = useState("");
   const [customizing, setCustomizing] = useState(null);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");

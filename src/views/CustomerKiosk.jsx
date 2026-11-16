@@ -331,6 +331,8 @@ useEffect(() => {
   const [cart, setCart] = useState([]);
   const [reviewing, setReviewing] = useState(false); // showing the order review step
   const [confirmation, setConfirmation] = useState(null); // placed order number
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const { subtotal, tax, total } = orderTotals(cart);
 
@@ -361,11 +363,20 @@ useEffect(() => {
     setCart(cart.filter((i) => i.cartId !== cartId));
   }
 
-  function checkout() {
-    const order = placeOrder(cart, { source: "Kiosk" });
-    setCart([]);
-    setReviewing(false);
-    setConfirmation(order.number);
+  async function checkout() {
+    if (submitting || cart.length === 0) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const order = await placeOrder(cart, { source: "Kiosk" });
+      setCart([]);
+      setReviewing(false);
+      setConfirmation(order.number);
+    } catch (error) {
+      setSubmitError(`Order not submitted: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (reviewing) {
@@ -376,6 +387,8 @@ useEffect(() => {
         onRemove={removeFromCart}
         onBack={() => setReviewing(false)}
         onConfirm={checkout}
+        submitting={submitting}
+        submitError={submitError}
         t={t}
       />
     );

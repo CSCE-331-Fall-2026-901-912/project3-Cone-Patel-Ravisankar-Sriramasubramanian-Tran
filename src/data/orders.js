@@ -1,9 +1,7 @@
-// Orders shared by the Kiosk, Cashier, Kitchen Display, and Manager Dashboard.
-// Future endpoints are noted above each function.
+// Database-backed orders shared by the Kiosk, Cashier, Kitchen, and Manager.
 import { load, save } from "./store.js";
 
-const KEY = "pos_orders";
-const NEXT_KEY = "pos_next_order_number";
+const KEY = "pos_db_orders";
 export const ORDER_KEYS = [KEY];
 export const TAX_RATE = 0.0825;
 
@@ -22,36 +20,41 @@ export function orderTotals(items) {
   return { subtotal, tax, total: subtotal + tax };
 }
 
-// Future: POST /api/orders
-// source is "Kiosk" or "Cashier"; employee and payment are only set by the cashier.
-export function placeOrder(items, { source, employee = null, payment = "Card" }) {
-  const number = Number(localStorage.getItem(NEXT_KEY) || 101);
-  localStorage.setItem(NEXT_KEY, String(number + 1));
-  const order = {
-    number,
-    items,
-    source,
-    employee,
-    payment,
-    ...orderTotals(items),
-    status: "new", // new -> in-progress -> ready
-    placedAt: Date.now(),
-  };
-  save(KEY, [...readAll(), order]);
-  return order;
+// Backend is authoritative. An unsuccessful submission never clears the cart or
+// creates a fake local order. Local storage is only a view cache for other tabs.
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+export async function refreshOrders() {
+  const response = await fetch(`${API_URL}/api/pos/orders`, { cache: "no-store" });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Unable to load orders");
+  save(KEY, data.orders);
+  return data.orders;
 }
 
-// Future: GET /api/orders
+export async function placeOrder(items, { source, employee = null, payment = "Card" }) {
+  const response = await fetch(`${API_URL}/api/pos/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items, source, employee, payment }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Unable to submit order");
+  await refreshOrders().catch((error) => console.warn("Order saved; list refresh failed:", error));
+  return result;
+}
+
+// Cached view of GET /api/pos/orders
 export function getAllOrders() {
   return readAll();
 }
 
-// Future: GET /api/orders?status=new,in-progress
+// Cached view of GET /api/pos/orders?status=new,in-progress
 export function getActiveOrders() {
   return readAll().filter((o) => o.status !== "ready");
 }
 
-// Future: GET /api/orders?status=ready&limit=n
+// Cached view of GET /api/pos/orders?status=ready&limit=n
 export function getRecentlyReady(limit = 5) {
   return readAll()
     .filter((o) => o.status === "ready")
@@ -59,31 +62,25 @@ export function getRecentlyReady(limit = 5) {
     .reverse();
 }
 
-// Future: GET /api/orders?status=ready (newest completed first)
+// Cached view of GET /api/pos/orders?status=ready (newest completed first)
 export function getCompletedOrders() {
   return readAll()
     .filter((o) => o.status === "ready")
     .sort((a, b) => (b.completedAt ?? b.placedAt) - (a.completedAt ?? a.placedAt));
 }
 
-// Future: PATCH /api/orders/:number { status }
-// Also records when an order was started and completed for the kitchen history.
-export function updateStatus(number, status) {
-  const now = Date.now();
-  save(
-    KEY,
-    readAll().map((o) => {
-      if (o.number !== number) return o;
-      const updated = { ...o, status };
-      if (status === "in-progress") {
-        updated.startedAt = o.startedAt ?? now;
-        delete updated.completedAt; // a recalled order is no longer complete
-      }
-      if (status === "ready") {
-        updated.startedAt = o.startedAt ?? now;
-        updated.completedAt = now;
-      }
-      return updated;
-    })
-  );
+// Persist kitchen changes so every browser sees the same status.
+export async function updateStatus(number, status) {
+  try {
+  const response = await fetch(`${API_URL}/api/pos/orders/${number}/status`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Unable to update order status");
+  await refreshOrders();
+  } catch (error) {
+    console.error("Could not update order status:", error);
+    window.alert(`Could not save kitchen status: ${error.message}`);
+  }
 }

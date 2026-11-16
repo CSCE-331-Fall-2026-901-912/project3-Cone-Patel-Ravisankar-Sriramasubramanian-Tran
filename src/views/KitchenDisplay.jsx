@@ -242,7 +242,7 @@ async function toggleSound() {
       ) : (
         <section className="ticket-grid" aria-label="Open orders" aria-live="polite">
           {sortedOrders.map((order) => (
-            <Ticket key={order.number} order={order} now={now} />
+            <Ticket key={order.number} order={order} now={now} setKitchenStatus={updateStatus} />
           ))}
         </section>
       )}
@@ -264,7 +264,7 @@ async function toggleSound() {
   );
 }
 
-function Ticket({ order, now }) {
+function Ticket({ order, now, setKitchenStatus }) {
   const seconds = Math.max(0, Math.floor((now - order.placedAt) / 1000));
   const minutes = Math.floor(seconds / 60);
   const waitText = `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
@@ -302,11 +302,11 @@ function Ticket({ order, now }) {
       </ul>
 
       {inProgress ? (
-        <button className="btn btn-success btn-block" onClick={() => updateStatus(order.number, "ready")}>
+        <button className="btn btn-success btn-block" onClick={() => setKitchenStatus(order.number, "ready")}>
           Mark Ready
         </button>
       ) : (
-        <button className="btn btn-primary btn-block" onClick={() => updateStatus(order.number, "in-progress")}>
+        <button className="btn btn-primary btn-block" onClick={() => setKitchenStatus(order.number, "in-progress")}>
           Start
         </button>
       )}

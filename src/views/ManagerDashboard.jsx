@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
-import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
+import { getAllOrders, ORDER_KEYS, itemPrice, netTotal } from "../data/orders.js";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
 import EmployeesTab from "../components/EmployeesTab.jsx";
 import { useLive, money } from "../data/store.js";
@@ -48,7 +48,7 @@ function Overview() {
 
   const startOfDay = new Date().setHours(0, 0, 0, 0);
   const today = orders.filter((o) => o.placedAt >= startOfDay);
-  const revenue = today.reduce((sum, o) => sum + o.total, 0);
+  const revenue = today.reduce((sum, o) => sum + netTotal(o), 0); // after refunds
   const lowStock = inventory.filter(isLowStock);
 
   // Drinks sold today, most popular first.
@@ -146,7 +146,7 @@ function Reports() {
 
   // Daily sales calculations
   const revenue = dailyOrders.reduce(
-    (sum, o) => sum + (Number(o.total) || 0), 0
+    (sum, o) => sum + netTotal(o), 0 // after refunds
   );
 
   const subtotal = dailyOrders.reduce(
@@ -215,7 +215,7 @@ function Reports() {
     return {
       date: key,
       label: day.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-      revenue: dayOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0),
+      revenue: dayOrders.reduce((sum, order) => sum + netTotal(order), 0),
     };
   });
 

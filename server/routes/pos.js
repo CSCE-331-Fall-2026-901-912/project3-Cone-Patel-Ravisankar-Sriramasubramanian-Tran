@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireRole } from '../middleware/authorize.js';
+import { getRefundsForOrders } from './refunds.js';
 
 // This adapter uses the team's EXISTING menu, orders and sale tables.
 // Database limitations: every cart line becomes its own orders/sale pair;
@@ -47,8 +48,9 @@ function parseToppings(value) {
     .map((name) => ({ name, price: (TOPPING_PRICES.get(name) ?? 0) / 100 }));
 }
 
-function mapOrder(row) {
+function mapOrder(row, refunds = new Map()) {
   const statusInfo = temporaryStatuses.get(Number(row.order_id)) || {};
+  const refund = refunds.get(Number(row.order_id)) || null;
   const basePrice = Number(row.price);
   const size = row.size || 'Regular';
   const extra = size === 'Large' ? 0.75 : 0;
@@ -60,7 +62,10 @@ function mapOrder(row) {
   const placedAt = row.sale_time ? new Date(row.sale_time).getTime() : 0;
   return {
     number: Number(row.order_id), source: 'Unknown', employee: row.employee_name || null,
-    payment: 'Unknown', status: statusInfo.status || 'new',
+    payment: 'Unknown',
+    // A cancelled order leaves the kitchen queue (SCRUM-41).
+    status: refund?.type === 'cancellation' ? 'cancelled' : (statusInfo.status || 'new'),
+    refund,
     subtotal, tax: Math.max(0, total - subtotal), total, placedAt,
     startedAt: statusInfo.startedAt,
     completedAt: statusInfo.completedAt,
@@ -94,7 +99,13 @@ router.get('/', async (_req, res) => {
         ORDER BY s.sale_time DESC, o.order_id DESC LIMIT 500`,
       query_timeout: 10000,
     });
-    res.json({ orders: result.rows.reverse().map(mapOrder), limitations: {
+    // Attach cancellations/refunds. If that lookup fails, still return the orders.
+    const refunds = await getRefundsForOrders(result.rows.map((row) => Number(row.order_id)))
+      .catch((error) => {
+        console.error('Refund lookup failed:', error.message);
+        return new Map();
+      });
+    res.json({ orders: result.rows.reverse().map((row) => mapOrder(row, refunds)), limitations: {
       groupedCheckouts: false, persistentKitchenStatus: false,
       sourceAndPaymentStored: false,
     }});
@@ -203,6 +214,10 @@ router.patch('/:number/status', requireKitchen, async (req, res) => {
   try {
     const exists = await pool.query('SELECT 1 FROM orders WHERE order_id = $1', [number]);
     if (!exists.rowCount) return res.status(404).json({ error: 'Order not found' });
+    const cancelled = await getRefundsForOrders([number]).catch(() => new Map());
+    if (cancelled.get(number)?.type === 'cancellation') {
+      return res.status(409).json({ error: 'This order was cancelled' });
+    }
     const previous = temporaryStatuses.get(number) || {};
     temporaryStatuses.set(number, {
       status,

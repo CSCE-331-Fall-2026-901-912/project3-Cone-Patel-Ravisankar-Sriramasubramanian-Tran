@@ -8,6 +8,7 @@ import session from "express-session";
 import authRoutes from "./routes/auth.js";
 import connectPgSimple from "connect-pg-simple";
 import ordersRouter from "./routes/orders.js";
+import posRouter from "./routes/pos.js";
 import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
 
@@ -175,6 +176,7 @@ app.get("/", (req, res) => {
   `);
 });
 app.use("/api/orders", ordersRouter);
+app.use("/api/pos/orders", posRouter);
 app.listen(PORT, () => {
   console.log(`Boba Bliss API running on port ${PORT}`);
 });

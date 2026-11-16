@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CATEGORIES, getActiveMenu, MENU_KEYS } from "../data/menu.js";
+import { useEffect, useState } from "react";
+import { CATEGORIES } from "../data/menu.js";
 import { getEmployees, EMPLOYEE_KEYS } from "../data/employees.js";
 import { placeOrder, itemPrice, orderTotals, getActiveOrders, ORDER_KEYS } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
@@ -8,7 +8,24 @@ import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx"
 // Built for speed: every drink on one screen, grouped by category,
 // with the current order always visible on the right.
 export default function CashierScreen() {
-  const menu = useLive(getActiveMenu, MENU_KEYS);
+  const [menu, setMenu] = useState([]);
+  const [menuError, setMenuError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    const api = import.meta.env.VITE_API_URL || "http://localhost:3001";
+    fetch(`${api}/api/menu`, { signal: controller.signal })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Cannot load menu");
+        return result;
+      })
+      .then((result) => setMenu(result.items.filter((item) => item.availability).map((item) => ({
+        id: item.menu_id, name: item.item_name, category: item.category,
+        price: Number(item.price), active: true,
+      }))))
+      .catch((error) => { if (error.name !== "AbortError") setMenuError(error.message); });
+    return () => controller.abort();
+  }, []);
   const employees = useLive(getEmployees, EMPLOYEE_KEYS).filter((e) => e.active);
   const openOrders = useLive(getActiveOrders, ORDER_KEYS);
 
@@ -17,6 +34,7 @@ export default function CashierScreen() {
   const [cart, setCart] = useState([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const { subtotal, tax, total } = orderTotals(cart);
   const employee = employees.find((e) => e.id === Number(employeeId));
@@ -37,11 +55,19 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
       .filter((item) => item.quantity > 0));
   }
 
-  function charge(payment) {
-    const order = placeOrder(cart, { source: "Cashier", employee: employee?.name ?? null, payment });
-    setCart([]);
-    setMessage(`Order #${order.number} sent to kitchen · ${payment} · ${money(order.total)}`);
-    setTimeout(() => setMessage(""), 4000);
+  async function charge(payment) {
+    if (submitting || cart.length === 0) return;
+    setSubmitting(true);
+    setMessage("");
+    try {
+      const order = await placeOrder(cart, { source: "Cashier", employee: employee?.name ?? null, payment });
+      setCart([]);
+      setMessage(`Order #${order.number} sent to kitchen · ${payment} · ${money(order.total)}`);
+    } catch (error) {
+      setMessage(`Order not submitted: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -81,7 +107,8 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
           <p className="muted" role="status">
             {query && visibleMenu.length === 0 ? `No drinks match "${search.trim()}".` : ""}
           </p>
-          {CATEGORIES.filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
+          {menuError && <p role="alert">Menu unavailable: {menuError}</p>}
+          {[...new Set([...CATEGORIES, ...visibleMenu.map((d) => d.category)])].filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
             <div key={c} className="cashier-category">
               <h2>{c}</h2>
               <div className="cashier-grid">
@@ -149,11 +176,11 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
             <span>{money(total)}</span>
           </div>
           <div className="pay-buttons">
-            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => charge("Cash")}>
-              Cash
+            <button className="btn btn-primary btn-lg" disabled={cart.length === 0 || submitting} onClick={() => charge("Cash")}>
+              {submitting ? "Submitting…" : "Cash"}
             </button>
-            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => charge("Card")}>
-              Card
+            <button className="btn btn-primary btn-lg" disabled={cart.length === 0 || submitting} onClick={() => charge("Card")}>
+              {submitting ? "Submitting…" : "Card"}
             </button>
           </div>
           <p className="cashier-message" role="status">

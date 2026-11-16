@@ -11,6 +11,7 @@ import ordersRouter from "./routes/orders.js";
 import posRouter from "./routes/pos.js";
 import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
+import assistantRouter from "./routes/assistant.js";
 
 const app = express();
 
@@ -81,6 +82,7 @@ app.get("/api/menu", async (req, res) => {
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/images", imagesRouter);
 app.use("/api/translate", translateRouter);
+app.use("/api/assistant", assistantRouter);
 const PgSession = connectPgSimple(session);
 
 if (!process.env.SESSION_SECRET) {

@@ -4,6 +4,7 @@ import { getEmployees, EMPLOYEE_KEYS } from "../data/employees.js";
 import { placeOrder, itemPrice, orderTotals, getActiveOrders, ORDER_KEYS } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
+import Receipt from "../components/Receipt.jsx";
 
 //built for speed: every drink on one screen, grouped by category
 //with the current order always visible on the right
@@ -29,9 +30,9 @@ export default function CashierScreen() {
   const [employeeId, setEmployeeId] = useState(employees[0]?.id ?? "");
   const [customizing, setCustomizing] = useState(null);
   const [cart, setCart] = useState([]);
-  const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [pendingPayment, setPendingPayment] = useState(null);
+  const [receipt, setReceipt] = useState(null);
 
   const { subtotal, tax, total } = orderTotals(cart);
   const employee = employees.find((e) => e.id === Number(employeeId));
@@ -61,17 +62,9 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
 
   function charge(payment) {
     setPendingPayment(null);
-      function charge(payment) {
-        setPendingPayment(null);
-        const order = placeOrder(cart, { source: "Cashier", employee: employee?.name ?? null, payment });
-        setCart([]);
-        setMessage(`Order #${order.number} sent to kitchen · ${payment} · ${money(order.total)}`);
-        setTimeout(() => setMessage(""), 4000);
-      }
     const order = placeOrder(cart, { source: "Cashier", employee: employee?.name ?? null, payment });
     setCart([]);
-    setMessage(`Order #${order.number} sent to kitchen · ${payment} · ${money(order.total)}`);
-    setTimeout(() => setMessage(""), 4000);
+    setReceipt(order);
   }
 
   return (
@@ -188,9 +181,6 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
               Card
             </button>
           </div>
-          <p className="cashier-message" role="status">
-            {message}
-          </p>
         </aside>
       </div>
       {pendingPayment && (
@@ -208,6 +198,7 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
         </div>
       )}
       {customizing && <CustomizeDialog drink={customizing} onAdd={addToCart} onCancel={() => setCustomizing(null)} />}
+      {receipt && <Receipt order={receipt} onClose={() => setReceipt(null)} />}
     </div>
   );
 }

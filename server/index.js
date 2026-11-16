@@ -11,8 +11,7 @@ import ordersRouter from "./routes/orders.js";
 import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
 import shiftsRouter from "./routes/shifts.js";
-// ...
-app.use("/api/shifts", shiftsRouter);
+
 
 const app = express();
 
@@ -178,6 +177,7 @@ app.get("/", (req, res) => {
   `);
 });
 app.use("/api/orders", ordersRouter);
+app.use("/api/shifts", shiftsRouter);
 app.listen(PORT, () => {
   console.log(`Boba Bliss API running on port ${PORT}`);
 });

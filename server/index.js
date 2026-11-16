@@ -12,6 +12,7 @@ import posRouter from "./routes/pos.js";
 import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
 import assistantRouter from "./routes/assistant.js";
+import weatherRouter from "./routes/weather.js";
 
 const app = express();
 
@@ -126,6 +127,7 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/images", imagesRouter);
 app.use("/api/translate", translateRouter);
 app.use("/api/assistant", assistantRouter);
+app.use("/api/weather", weatherRouter);
 
 app.get("/", (req, res) => {
   res.send(`
@@ -161,6 +163,10 @@ app.get("/", (req, res) => {
           <li>
             <a href="/api/auth/google">Google Login</a>
             — Start Google authentication
+          </li>
+          <li>
+            <a href="/api/weather">Weather Forecast</a>
+            — College Station forecast and drink suggestion
           </li>
           <li>
             <a href="/api/auth/me">Current Session</a>

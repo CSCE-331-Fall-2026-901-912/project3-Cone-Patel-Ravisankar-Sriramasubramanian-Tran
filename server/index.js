@@ -10,6 +10,9 @@ import connectPgSimple from "connect-pg-simple";
 import ordersRouter from "./routes/orders.js";
 import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
+import shiftsRouter from "./routes/shifts.js";
+// ...
+app.use("/api/shifts", shiftsRouter);
 
 const app = express();
 

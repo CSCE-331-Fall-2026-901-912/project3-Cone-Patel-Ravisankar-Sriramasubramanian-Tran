@@ -15,6 +15,14 @@ const VIEWS = [
 const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001";
 
+const ROLE_LABELS = {
+  manager: "Manager",
+  cashier: "Cashier",
+  kitchen: "Kitchen staff",
+  inactive: "No access",
+  unassigned: "No role assigned",
+};
+
 const ACCESS = {
   "/manager": ["manager"],
   "/cashier": ["cashier", "manager"],
@@ -99,7 +107,11 @@ export default function PortalHub() {
                       {v.title}
                     </span>
                     <span className="hub-card-desc">
-                      {loading ? "Checking access..." : "Sign in to access"}
+                      {loading
+                        ? "Checking access..."
+                        : user
+                          ? "Not available for your role"
+                          : "Sign in to access"}
                     </span>
                   </div>
                 )}
@@ -120,6 +132,15 @@ export default function PortalHub() {
               Signed in as <strong>{user.name}</strong>
             </p>
             <p className="hub-user-email">{user.email}</p>
+            <p className="hub-user-role">
+              {ROLE_LABELS[user.role] ?? user.role}
+            </p>
+            {(user.role === "unassigned" || user.role === "inactive") && (
+              <p className="hub-auth-message">
+                Your account doesn't have staff access yet. Ask a manager to add{" "}
+                <strong>{user.email}</strong> on the Employees tab, then refresh this page.
+              </p>
+            )}
 
             <button
               type="button"

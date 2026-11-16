@@ -35,6 +35,7 @@ export async function refreshOrders() {
 export async function placeOrder(items, { source, employee = null, payment = "Card" }) {
   const response = await fetch(`${API_URL}/api/pos/orders`, {
     method: "POST",
+    credentials: "include", // cashier orders are tied to the logged-in employee
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ items, source, employee, payment }),
   });
@@ -50,8 +51,9 @@ export function getAllOrders() {
 }
 
 // Cached view of GET /api/pos/orders?status=new,in-progress
+// Cancelled orders never reach the kitchen queue.
 export function getActiveOrders() {
-  return readAll().filter((o) => o.status !== "ready");
+  return readAll().filter((o) => o.status !== "ready" && o.status !== "cancelled");
 }
 
 // Cached view of GET /api/pos/orders?status=ready&limit=n
@@ -73,7 +75,8 @@ export function getCompletedOrders() {
 export async function updateStatus(number, status) {
   try {
   const response = await fetch(`${API_URL}/api/pos/orders/${number}/status`, {
-    method: "PATCH", headers: { "Content-Type": "application/json" },
+    method: "PATCH", credentials: "include", // kitchen or manager login required
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
   });
   const data = await response.json().catch(() => ({}));
@@ -83,4 +86,24 @@ export async function updateStatus(number, status) {
     console.error("Could not update order status:", error);
     window.alert(`Could not save kitchen status: ${error.message}`);
   }
+}
+
+// What the shop actually kept for an order after any cancellation or refund.
+export function netTotal(order) {
+  return Math.max(0, (Number(order.total) || 0) - (order.refund?.amount || 0));
+}
+
+// SCRUM-41: Manager cancels an order (full refund) or refunds part/all of it.
+// POST /api/refunds - manager login required.
+export async function refundOrder({ orderId, type, amount, reason }) {
+  const response = await fetch(`${API_URL}/api/refunds`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderId, type, amount, reason }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Unable to process the refund");
+  await refreshOrders().catch((error) => console.warn("Refund saved; list refresh failed:", error));
+  return data.refund;
 }

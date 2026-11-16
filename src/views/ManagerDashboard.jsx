@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
-import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
+import { getAllOrders, ORDER_KEYS, itemPrice, netTotal } from "../data/orders.js";
+import RefundDialog from "../components/RefundDialog.jsx";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
-import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
+import EmployeesTab from "../components/EmployeesTab.jsx";
 import { useLive, money } from "../data/store.js";
 import { WeatherForecast } from "../components/Weather.jsx";
 
@@ -48,7 +49,7 @@ function Overview() {
 
   const startOfDay = new Date().setHours(0, 0, 0, 0);
   const today = orders.filter((o) => o.placedAt >= startOfDay);
-  const revenue = today.reduce((sum, o) => sum + o.total, 0);
+  const revenue = today.reduce((sum, o) => sum + netTotal(o), 0); // after refunds
   const lowStock = inventory.filter(isLowStock);
 
   // Drinks sold today, most popular first.
@@ -146,7 +147,7 @@ function Reports() {
 
   // Daily sales calculations
   const revenue = dailyOrders.reduce(
-    (sum, o) => sum + (Number(o.total) || 0), 0
+    (sum, o) => sum + netTotal(o), 0 // after refunds
   );
 
   const subtotal = dailyOrders.reduce(
@@ -215,7 +216,7 @@ function Reports() {
     return {
       date: key,
       label: day.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-      revenue: dayOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0),
+      revenue: dayOrders.reduce((sum, order) => sum + netTotal(order), 0),
     };
   });
 
@@ -509,6 +510,20 @@ function Orders() {
   // Keep track of the manager's search and filter selections.
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [refunding, setRefunding] = useState(null); // order number in the cancel/refund window
+  const [notice, setNotice] = useState("");
+
+  const refundingOrder = orders.find((o) => o.number === refunding);
+
+  function handleRefundDone(refund) {
+    setRefunding(null);
+    setNotice(
+      refund.type === "cancellation"
+        ? `Order #${refund.orderId} cancelled. ${money(refund.amount)} refunded.`
+        : `Refunded ${money(refund.amount)} for order #${refund.orderId}.`
+    );
+    window.setTimeout(() => setNotice(""), 6000);
+  }
 
   const searchTerm = search.trim().toLowerCase();
 
@@ -563,6 +578,7 @@ function Orders() {
             <option value="new">New</option>
             <option value="in-progress">In progress</option>
             <option value="ready">Ready</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </label>
 
@@ -579,6 +595,12 @@ function Orders() {
       <p className="muted" role="status">
         Showing {filteredOrders.length} of {orders.length} orders
       </p>
+
+      {notice && (
+        <p className="manager-notice" role="status">
+          {notice}
+        </p>
+      )}
 
       {filteredOrders.length === 0 ? (
         <p className="muted">
@@ -597,12 +619,15 @@ function Orders() {
                 <th>Payment</th>
                 <th className="num">Total</th>
                 <th>Status</th>
+                <th>
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {filteredOrders.map((o) => (
-                <tr key={o.number}>
+                <tr key={o.number} className={o.status === "cancelled" ? "row-cancelled" : ""}>
                   <td>#{o.number}</td>
                   <td>
                     {new Date(o.placedAt).toLocaleString([], {
@@ -620,21 +645,51 @@ function Orders() {
                       .join(", ")}
                   </td>
                   <td>{o.payment}</td>
-                  <td className="num">{money(o.total)}</td>
+                  <td className="num">
+                    {money(o.total)}
+                    {o.refund?.type === "refund" && (
+                      <span className="refund-note">−{money(o.refund.amount)} refunded</span>
+                    )}
+                  </td>
                   <td>
                     <span className={`status status-${o.status}`}>
                       {o.status === "in-progress"
                         ? "In progress"
                         : o.status === "ready"
                           ? "Ready"
-                          : "New"}
+                          : o.status === "cancelled"
+                            ? "Cancelled"
+                            : "New"}
                     </span>
+                  </td>
+                  <td className="order-actions-cell">
+                    {o.refund ? (
+                      <span
+                        className="muted small"
+                        title={`${o.refund.reason}${o.refund.employee ? ` · by ${o.refund.employee}` : ""}`}
+                      >
+                        {o.refund.type === "cancellation" ? "Cancelled" : "Refunded"}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => setRefunding(o.number)}
+                        aria-label={`Cancel or refund order ${o.number}`}
+                      >
+                        Cancel / Refund
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {refundingOrder && (
+        <RefundDialog order={refundingOrder} onClose={() => setRefunding(null)} onDone={handleRefundDone} />
       )}
     </>
   );
@@ -1269,68 +1324,4 @@ function InventoryTab() {
 }
 
 /* ---------------- Employees ---------------- */
-
-function EmployeesTab() {
-  const employees = useLive(getEmployees, EMPLOYEE_KEYS);
-  const [form, setForm] = useState({ name: "", role: "Cashier" });
-
-  function submit(e) {
-    e.preventDefault();
-    if (!form.name.trim()) return;
-    addEmployee({ name: form.name.trim(), role: form.role });
-    setForm({ name: "", role: "Cashier" });
-  }
-
-  return (
-    <>
-      <form className="inline-form" onSubmit={submit} aria-label="Add employee">
-        <h2>Add an employee</h2>
-        <label>
-          Name
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        </label>
-        <label>
-          Role
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            {ROLES.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-        </label>
-        <button className="btn btn-primary">Add</button>
-      </form>
-
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((e) => (
-              <tr key={e.id} className={e.active ? "" : "row-off"}>
-                <td>{e.name}</td>
-                <td>
-                  <select className="cell-select" value={e.role} aria-label={`Role for ${e.name}`} onChange={(ev) => updateEmployee(e.id, { role: ev.target.value })}>
-                    {ROLES.map((r) => (
-                      <option key={r}>{r}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <label className="toggle">
-                    <input type="checkbox" checked={e.active} onChange={() => updateEmployee(e.id, { active: !e.active })} />
-                    {e.active ? "Yes" : "No"}
-                  </label>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
+// Employees tab lives in src/components/EmployeesTab.jsx (SCRUM-40).

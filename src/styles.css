@@ -509,6 +509,18 @@ h1, h2, .hub-card-title {
   color: #777;
 }
 
+.hub-user-info .hub-user-role {
+  display: block;
+  width: fit-content;
+  margin: 8px auto 4px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #fbe7e2;
+  color: #7b5140;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
 .hub-signout-btn {
   margin-top: 12px;
   padding: 10px 24px;

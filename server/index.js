@@ -14,6 +14,7 @@ import translateRouter from "./routes/translate.js";
 import assistantRouter from "./routes/assistant.js";
 import weatherRouter from "./routes/weather.js";
 import employeesRouter from "./routes/employees.js";
+import refundsRouter, { ensureRefundTable } from "./routes/refunds.js";
 
 const app = express();
 
@@ -130,6 +131,7 @@ app.use("/api/translate", translateRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/weather", weatherRouter);
 app.use("/api/employees", employeesRouter);
+app.use("/api/refunds", refundsRouter);
 
 app.get("/", (req, res) => {
   res.send(`
@@ -186,6 +188,11 @@ app.get("/", (req, res) => {
 });
 app.use("/api/orders", ordersRouter);
 app.use("/api/pos/orders", posRouter);
+// Create the order_refund table if it doesn't exist yet (SCRUM-41).
+ensureRefundTable().catch((error) =>
+  console.error("Could not create order_refund table:", error.message)
+);
+
 app.listen(PORT, () => {
   console.log(`Boba Bliss API running on port ${PORT}`);
 });

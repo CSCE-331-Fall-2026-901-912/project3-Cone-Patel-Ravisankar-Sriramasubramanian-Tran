@@ -475,6 +475,55 @@ h1, h2, .hub-card-title {
   letter-spacing: 0.4rem;
 }
 
+.hub-card-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.hub-card-locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.hub-auth-section {
+  text-align: center;
+}
+
+.hub-auth-message {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 12px;
+}
+
+.hub-user-info {
+  text-align: center;
+}
+
+.hub-user-info p {
+  margin: 4px 0;
+}
+
+.hub-user-email {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.hub-signout-btn {
+  margin-top: 12px;
+  padding: 10px 24px;
+  border: 1px solid #b98c76;
+  border-radius: 8px;
+  background: transparent;
+  color: #7b5140;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.hub-signout-btn:hover {
+  background: #f5e9e2;
+}
 
 /* Manager Orders search and filtering */
 

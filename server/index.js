@@ -1,4 +1,4 @@
-
+import { requireRole } from "./middleware/authorize.js";
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
@@ -79,10 +79,6 @@ app.get("/api/menu", async (req, res) => {
   }
 });
 
-app.use("/api/inventory", inventoryRoutes);
-app.use("/api/images", imagesRouter);
-app.use("/api/translate", translateRouter);
-app.use("/api/assistant", assistantRouter);
 const PgSession = connectPgSimple(session);
 
 if (!process.env.SESSION_SECRET) {
@@ -109,7 +105,6 @@ app.use(
   })
 );
 
-
 function requireTrustedOrigin(req, res, next) {
   const allowedOrigin =
     process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -127,6 +122,10 @@ function requireTrustedOrigin(req, res, next) {
 
 app.use("/api/auth/logout", requireTrustedOrigin);
 app.use("/api/auth", authRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/images", imagesRouter);
+app.use("/api/translate", translateRouter);
+app.use("/api/assistant", assistantRouter);
 
 app.get("/", (req, res) => {
   res.send(`

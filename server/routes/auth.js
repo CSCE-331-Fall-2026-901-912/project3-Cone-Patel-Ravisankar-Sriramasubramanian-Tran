@@ -1,4 +1,4 @@
-
+import { pool } from "../db.js";
 import { Router } from "express";
 import * as oidc from "openid-client";
 
@@ -16,6 +16,18 @@ async function getGoogleConfig() {
   }
 
   return googleConfig;
+}
+
+async function getEmployeeRole(googleId) {
+  const result = await pool.query(
+    `SELECT e.employee_id, e.role
+     FROM employee e
+     JOIN user_accounts a ON e.account_id = a.account_id
+     WHERE a.google_id = $1`,
+    [googleId]
+  );
+
+  return result.rows[0] || null;
 }
 
 // Start Google sign-in
@@ -91,6 +103,31 @@ router.get("/google/callback", async (req, res, next) => {
       picture: claims.picture || null,
     };
 
+    const account = await pool.query(
+      `INSERT INTO user_accounts
+        (google_id, google_email, display_name, picture_url)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (google_id)
+      DO UPDATE SET
+        google_email = EXCLUDED.google_email,
+        display_name = EXCLUDED.display_name,
+        picture_url = EXCLUDED.picture_url,
+        last_login = NOW()
+      RETURNING account_id`,
+      [user.googleId, user.email, user.name, user.picture]
+    );
+
+    await pool.query(
+      `INSERT INTO login_history (account_id)
+      VALUES ($1)`,
+      [account.rows[0].account_id]
+    );
+
+    const employee = await getEmployeeRole(user.googleId);
+
+    user.role = employee?.role || "unassigned";
+    user.employeeId = employee?.employee_id || null;
+
     req.session.regenerate((error) => {
       if (error) return next(error);
 
@@ -110,14 +147,28 @@ router.get("/google/callback", async (req, res, next) => {
 });
 
 // Get authenticated user
-router.get("/me", (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({
-      error: "Not authenticated",
-    });
-  }
+router.get("/me", async (req, res, next) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({
+        error: "Not authenticated",
+      });
+    }
 
-  res.json({ user: req.session.user });
+    const employee = await getEmployeeRole(
+      req.session.user.googleId
+    );
+
+    res.json({
+      user: {
+        ...req.session.user,
+        role: employee?.role || "unassigned",
+        employeeId: employee?.employee_id || null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Logout

@@ -6,6 +6,7 @@ import ManagerDashboard from "./views/ManagerDashboard.jsx";
 import CashierScreen from "./views/CashierScreen.jsx";
 import CustomerKiosk from "./views/CustomerKiosk.jsx";
 import KitchenDisplay from "./views/KitchenDisplay.jsx";
+import AssistantChat from "./components/AssistantChat.jsx";
 
 export default function App() {
   useEffect(() => {
@@ -16,6 +17,7 @@ export default function App() {
     return () => window.clearInterval(interval);
   }, []);
   return (
+    <>
     <Routes>
       <Route path="/" element={<PortalHub />} />
       <Route path="/manager" element={<ManagerDashboard />} />
@@ -23,5 +25,7 @@ export default function App() {
       <Route path="/kiosk" element={<CustomerKiosk />} />
       <Route path="/kitchen" element={<KitchenDisplay />} />
     </Routes>
+    <AssistantChat />
+    </>
   );
 }

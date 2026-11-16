@@ -4,6 +4,7 @@ import { placeOrder, itemPrice, orderTotals, getActiveOrders, ORDER_KEYS } from 
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
 import Receipt from "../components/Receipt.jsx";
+import ClockInOut from "../components/ClockInOut.jsx";
 
 //built for speed: every drink on one screen, grouped by category
 //with the current order always visible on the right
@@ -94,6 +95,7 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
               ))}
             </select>
           </label>
+          <ClockInOut employee={employee} />
         </div>
       </header>
 

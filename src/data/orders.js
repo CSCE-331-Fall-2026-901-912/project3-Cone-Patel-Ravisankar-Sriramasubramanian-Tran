@@ -24,7 +24,7 @@ export function orderTotals(items) {
 
 // Future: POST /api/orders
 // source is "Kiosk" or "Cashier"; employee and payment are only set by the cashier.
-export function placeOrder(items, { source, employee = null, payment = "Card" }) {
+export function placeOrder(items, { source, employee = null, payment = "Card", customerName = null }) {
   const number = Number(localStorage.getItem(NEXT_KEY) || 101);
   localStorage.setItem(NEXT_KEY, String(number + 1));
   const order = {
@@ -33,6 +33,7 @@ export function placeOrder(items, { source, employee = null, payment = "Card" })
     source,
     employee,
     payment,
+    customerName,
     ...orderTotals(items),
     status: "new", // new -> in-progress -> ready
     placedAt: Date.now(),

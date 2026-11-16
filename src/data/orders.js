@@ -35,6 +35,7 @@ export async function refreshOrders() {
 export async function placeOrder(items, { source, employee = null, payment = "Card" }) {
   const response = await fetch(`${API_URL}/api/pos/orders`, {
     method: "POST",
+    credentials: "include", // cashier orders are tied to the logged-in employee
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ items, source, employee, payment }),
   });
@@ -73,7 +74,8 @@ export function getCompletedOrders() {
 export async function updateStatus(number, status) {
   try {
   const response = await fetch(`${API_URL}/api/pos/orders/${number}/status`, {
-    method: "PATCH", headers: { "Content-Type": "application/json" },
+    method: "PATCH", credentials: "include", // kitchen or manager login required
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
   });
   const data = await response.json().catch(() => ({}));

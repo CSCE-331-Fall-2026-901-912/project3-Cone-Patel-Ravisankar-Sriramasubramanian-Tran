@@ -1,10 +1,20 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
+import { requireRole } from '../middleware/authorize.js';
 
 // This adapter uses the team's EXISTING menu, orders and sale tables.
 // Database limitations: every cart line becomes its own orders/sale pair;
 // source, payment method, checkout group and kitchen status have no columns.
 const router = Router();
+
+// SCRUM-40: Kiosk orders need no login. Cashier orders need a cashier or
+// manager login, and kitchen status changes need kitchen or manager.
+const requireCashier = requireRole('cashier', 'manager');
+const requireKitchen = requireRole('kitchen', 'manager');
+function requireCashierForCashierOrders(req, res, next) {
+  if (req.body?.source === 'Cashier') return requireCashier(req, res, next);
+  next();
+}
 const TAX_RATE = 0.0825;
 const cents = (value) => Math.round((Number(value) + Number.EPSILON) * 100);
 const dollars = (value) => (value / 100).toFixed(2);
@@ -49,7 +59,7 @@ function mapOrder(row) {
   const total = row.total_amount == null ? subtotal : Number(row.total_amount);
   const placedAt = row.sale_time ? new Date(row.sale_time).getTime() : 0;
   return {
-    number: Number(row.order_id), source: 'Unknown', employee: null,
+    number: Number(row.order_id), source: 'Unknown', employee: row.employee_name || null,
     payment: 'Unknown', status: statusInfo.status || 'new',
     subtotal, tax: Math.max(0, total - subtotal), total, placedAt,
     startedAt: statusInfo.startedAt,
@@ -70,7 +80,7 @@ router.get('/', async (_req, res) => {
       text: `
         SELECT o.order_id, o.menu_id, o.quantity, o.size, o.sugar_level,
                o.ice_level, o.toppings, m.item_name, m.price,
-               s.sale_time, s.total_amount
+               s.sale_time, s.total_amount, e.employee_name
         FROM (
           SELECT DISTINCT ON (order_id) order_id, sale_time, total_amount
           FROM sale
@@ -80,6 +90,7 @@ router.get('/', async (_req, res) => {
         ) s
         JOIN orders o ON o.order_id = s.order_id
         JOIN menu m ON m.menu_id = o.menu_id
+        LEFT JOIN employee e ON e.employee_id = o.employee_id
         ORDER BY s.sale_time DESC, o.order_id DESC LIMIT 500`,
       query_timeout: 10000,
     });
@@ -93,7 +104,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireCashierForCashierOrders, async (req, res) => {
   const { items, source, payment = 'Card' } = req.body || {};
   if (!['Cashier', 'Kiosk'].includes(source) || !['Cash', 'Card'].includes(payment) ||
       (source === 'Kiosk' && payment !== 'Card') || !Array.isArray(items) ||
@@ -145,21 +156,22 @@ router.post('/', async (req, res) => {
       subtotalCents += lineSubtotal;
       taxCents += lineTax;
 
-      // The schema's employee_id is a foreign key to employee.employee_id.
-      // Checkout sends a display NAME, not a verified employee ID, so leave
-      // this nullable field NULL instead of inserting an invalid foreign key.
+      // employee_id comes from the verified login (set by requireRole), never
+      // from the request body. Kiosk orders have no employee, so it stays NULL.
+      const employeeId = source === 'Cashier' ? (req.employee?.employee_id ?? null) : null;
       const savedOrder = await client.query(
         `INSERT INTO orders (employee_id, menu_id, quantity, size,
                              sugar_level, ice_level, toppings)
-         VALUES (NULL, $1, $2, $3, $4, $5, $6) RETURNING order_id`,
+         VALUES ($7, $1, $2, $3, $4, $5, $6) RETURNING order_id`,
         [menuId, quantity, size, sugar, ice,
-          JSON.stringify(names.map((name) => ({ name, price: TOPPING_PRICES.get(name) / 100 })))]
+          JSON.stringify(names.map((name) => ({ name, price: TOPPING_PRICES.get(name) / 100 }))),
+          employeeId]
       );
       const id = Number(savedOrder.rows[0].order_id);
       await client.query(
         `INSERT INTO sale (order_id, employee_id, sale_time, total_amount)
-         VALUES ($1, NULL, CURRENT_TIMESTAMP, $2)`,
-        [id, dollars(lineTotal)]
+         VALUES ($1, $3, CURRENT_TIMESTAMP, $2)`,
+        [id, dollars(lineTotal), employeeId]
       );
       newOrderIds.push(id);
     }
@@ -181,7 +193,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.patch('/:number/status', async (req, res) => {
+router.patch('/:number/status', requireKitchen, async (req, res) => {
   const number = Number(req.params.number);
   const { status } = req.body || {};
   if (!Number.isSafeInteger(number) || number <= 0 ||

@@ -6,7 +6,14 @@ import "./OrderReview.css";
 
 // Full-screen review step the kiosk shows between "Review Order" and placing it.
 // Customers can change quantities, remove drinks, go back to add more, or confirm.
-export default function OrderReview({ cart, onChangeQuantity, onRemove, onBack, onConfirm }) {
+export default function OrderReview({
+  cart,
+  onChangeQuantity,
+  onRemove,
+  onBack,
+  onConfirm,
+  t = (text) => text,
+}) {
   const headingRef = useRef(null);
   const { subtotal, tax, total } = orderTotals(cart);
   const drinkCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -20,37 +27,37 @@ export default function OrderReview({ cart, onChangeQuantity, onRemove, onBack, 
     <main className="kiosk review">
       <header className="kiosk-header">
         <h1 ref={headingRef} tabIndex={-1}>
-          Review Your Order
+          {t("Review Your Order")}
         </h1>
-        <p>Check your drinks before you place your order.</p>
+        <p>{t("Check your drinks before you place your order.")}</p>
       </header>
 
       <div className="review-body">
         {cart.length === 0 ? (
           <section className="review-empty" aria-live="polite">
-            <p>Your order is empty.</p>
+            <p>{t("Your order is empty.")}</p>
             <button className="btn btn-primary btn-lg" onClick={onBack}>
-              Back to Menu
+              {t("Back to Menu")}
             </button>
           </section>
         ) : (
           <>
-            <section className="review-items" aria-label="Drinks in your order">
+            <section className="review-items" aria-label={t("Drinks in your order")}>
               <ul>
                 {cart.map((item) => (
                   <li key={item.cartId} className="review-item">
                     <div className="review-item-info">
-                      <h2>{item.name}</h2>
-                      <p className="review-item-details">{itemSummary(item)}</p>
-                      <p className="review-item-each">{money(itemPrice({ ...item, quantity: 1 }))} each</p>
+                      <h2>{t(item.name)}</h2>
+                      <p className="review-item-details">{itemSummary(item, t)}</p>
+                      <p className="review-item-each">{money(itemPrice({ ...item, quantity: 1 }))} {t("each")}</p>
                     </div>
 
-                    <div className="review-qty" role="group" aria-label={`Quantity of ${item.name}`}>
+                    <div className="review-qty" role="group" aria-label={t(`Quantity of ${item.name}`)}>
                       <button
                         className="btn review-qty-btn"
                         onClick={() => onChangeQuantity(item.cartId, item.quantity - 1)}
                         disabled={item.quantity <= 1}
-                        aria-label={`Decrease quantity of ${item.name}`}
+                        aria-label={t(`Decrease quantity of ${item.name}`)}
                       >
                         −
                       </button>
@@ -60,7 +67,7 @@ export default function OrderReview({ cart, onChangeQuantity, onRemove, onBack, 
                       <button
                         className="btn review-qty-btn"
                         onClick={() => onChangeQuantity(item.cartId, item.quantity + 1)}
-                        aria-label={`Increase quantity of ${item.name}`}
+                        aria-label={t(`Increase quantity of ${item.name}`)}
                       >
                         +
                       </button>
@@ -68,8 +75,8 @@ export default function OrderReview({ cart, onChangeQuantity, onRemove, onBack, 
 
                     <div className="review-item-right">
                       <span className="review-item-price">{money(itemPrice(item))}</span>
-                      <button className="btn-link" onClick={() => onRemove(item.cartId)} aria-label={`Remove ${item.name}`}>
-                        Remove
+                      <button className="btn-link" onClick={() => onRemove(item.cartId)} aria-label={t(`Remove ${item.name}`)}>
+                        {t("Remove")}
                       </button>
                     </div>
                   </li>
@@ -77,30 +84,30 @@ export default function OrderReview({ cart, onChangeQuantity, onRemove, onBack, 
               </ul>
             </section>
 
-            <aside className="review-summary" aria-label="Order total">
-              <h2>Summary</h2>
+            <aside className="review-summary" aria-label={t("Order total")}>
+              <h2>{t("Summary")}</h2>
               <p className="review-count">
-                {drinkCount} {drinkCount === 1 ? "drink" : "drinks"}
+                {drinkCount} {t(drinkCount === 1 ? "drink" : "drinks")}
               </p>
               <div className="cart-lines">
                 <div>
-                  <span>Subtotal</span>
+                  <span>{t("Subtotal")}</span>
                   <span>{money(subtotal)}</span>
                 </div>
                 <div>
-                  <span>Tax</span>
+                  <span>{t("Tax")}</span>
                   <span>{money(tax)}</span>
                 </div>
               </div>
               <div className="cart-total" aria-live="polite">
-                <span>Total</span>
+                <span>{t("Total")}</span>
                 <span>{money(total)}</span>
               </div>
               <button className="btn btn-primary btn-lg" onClick={onConfirm}>
-                Confirm &amp; Place Order
+                {t("Confirm & Place Order")}
               </button>
               <button className="btn btn-lg review-back" onClick={onBack}>
-                Back to Menu
+                {t("Back to Menu")}
               </button>
             </aside>
           </>

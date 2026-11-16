@@ -1383,8 +1383,13 @@ h1, h2, .hub-card-title {
   outline: none;
 }
 .cashier-menu > p.muted:empty {
+<<<<<<< HEAD
   display: none;
 }
+=======
+  display: none;}
+
+>>>>>>> origin/main
 /* Kitchen order completion confirmation */
 
 .kitchen-confirm-overlay {
@@ -1694,5 +1699,306 @@ h1, h2, .hub-card-title {
   .kitchen-toolbar .kitchen-sort select {
     flex: 1;
     min-width: 0;
+  }
+}
+
+.kitchen .kitchen-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls .kitchen-filter,
+.kitchen .kitchen-toolbar .kitchen-controls .kitchen-sort {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: auto;
+  min-width: 0;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls label {
+  color: #58392f;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls select {
+  min-height: 42px;
+  padding: 0.6rem 0.9rem;
+  background: #fffdf9;
+  color: #58392f;
+  border: 2px solid #e9cfc3;
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.kitchen .kitchen-toolbar .kitchen-controls select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .kitchen .kitchen-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kitchen .kitchen-toolbar .kitchen-controls {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 650px) {
+  .kitchen .kitchen-toolbar .kitchen-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kitchen .kitchen-toolbar .kitchen-controls .kitchen-filter,
+  .kitchen .kitchen-toolbar .kitchen-controls .kitchen-sort {
+    width: 100%;
+  }
+
+  .kitchen .kitchen-toolbar .kitchen-controls select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+
+/* Google authentication */
+.google-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 20px auto 28px;
+}
+
+.auth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 13px 22px;
+  border: 1px solid #e5d9cc;
+  border-radius: 14px;
+  background: #fffdf9;
+  color: #49382f;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(73, 56, 47, 0.05);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.auth-button:hover {
+  background: #f8f0e8;
+  border-color: #cbb7a5;
+  box-shadow: 0 6px 18px rgba(73, 56, 47, 0.1);
+  transform: translateY(-2px);
+}
+
+.auth-button:active {
+  transform: translateY(0);
+}
+
+.auth-button:focus-visible {
+  outline: 3px solid #b89b80;
+  outline-offset: 3px;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.auth-arrow {
+  margin-left: 6px;
+  color: #9c8573;
+  font-size: 19px;
+  font-weight: 400;
+  transition: transform 0.2s ease;
+}
+
+.google-signin:hover .auth-arrow {
+  transform: translateX(3px);
+}
+
+.auth-user {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 14px 20px;
+  border: 1px solid #e2d5c9;
+  border-radius: 12px;
+  background: #fffaf5;
+}
+
+.auth-user strong {
+  color: #49382f;
+}
+
+.auth-user p {
+  margin: 4px 0 0;
+  color: #78685e;
+  font-size: 13px;
+}
+
+.auth-error {
+  color: #b42318;
+  font-size: 13px;
+}
+
+.auth-status {
+  text-align: center;
+  color: #78685e;
+}
+
+
+
+/* Boba Bliss image cards */
+
+.drink-card-wrapper {
+  min-width: 0;
+}
+
+.menu-grid .drink-card-wrapper .drink-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  border: 1px solid #f0e2e5;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(105, 65, 78, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu-grid .drink-card-wrapper .drink-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(105, 65, 78, 0.16);
+}
+
+.menu-grid .drink-card-wrapper .drink-card:focus-visible {
+  outline: 3px solid #9b5675;
+  outline-offset: 3px;
+}
+
+.drink-image-container {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #fceef2;
+}
+
+.drink-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drink-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 64px;
+}
+
+.drink-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+}
+
+.drink-card-info .drink-name {
+  font-size: 16px;
+  font-weight: 650;
+  color: #47333c;
+}
+
+.drink-card-info .drink-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #a54f76;
+}
+
+.drink-photo-credit {
+  padding: 5px 8px 12px;
+  font-size: 11px;
+  color: #71666b;
+}
+
+.drink-photo-credit a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+
+/* Position language selector in top-right of kiosk header */
+.kiosk-header {
+  position: relative;
+}
+
+.kiosk-language {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kiosk-language label {
+  font-size: 14px;
+}
+
+.kiosk-language select {
+  padding: 8px 12px;
+  border: 1px solid #d9b7a9;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+/* Keep selector usable on smaller screens */
+@media (max-width: 600px) {
+  .kiosk-language {
+    position: static;
+    justify-content: center;
+    margin-top: 12px;
   }
 }

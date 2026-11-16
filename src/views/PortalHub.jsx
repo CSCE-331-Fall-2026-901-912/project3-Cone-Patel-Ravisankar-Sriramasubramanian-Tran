@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { SHOP_NAME } from "../data/menu.js";
+import GoogleAuth from "../components/GoogleAuth.jsx";
 
 // Only the Portal Hub links to the other views (one-way), per the
 // project requirements. No other view links back here or to each other.
@@ -37,8 +38,9 @@ export default function PortalHub() {
         </ul>
       </nav>
       <div className="hub-footer-decoration" aria-hidden="true">
-        ✿ ───── ✦ ───── ✿
+        ✿ ──── ✦ ──── ✿
       </div>
+      <GoogleAuth />
     </main>
   );
 }

@@ -12,6 +12,8 @@ export default function OrderReview({
   onRemove,
   onBack,
   onConfirm,
+  submitting = false,
+  submitError = "",
   t = (text) => text,
 }) {
   const headingRef = useRef(null);
@@ -103,8 +105,9 @@ export default function OrderReview({
                 <span>{t("Total")}</span>
                 <span>{money(total)}</span>
               </div>
-              <button className="btn btn-primary btn-lg" onClick={onConfirm}>
-                {t("Confirm & Place Order")}
+              {submitError && <p role="alert">{submitError}</p>}
+              <button className="btn btn-primary btn-lg" onClick={onConfirm} disabled={submitting || cart.length === 0}>
+                {submitting ? "Submitting…" : t("Confirm & Place Order")}
               </button>
               <button className="btn btn-lg review-back" onClick={onBack}>
                 {t("Back to Menu")}

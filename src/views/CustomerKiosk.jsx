@@ -6,6 +6,7 @@ import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx"
 import OrderReview from "../components/OrderReview.jsx";
 import Receipt from "../components/Receipt.jsx";
 import { useCurrentUser } from "../data/auth.js";
+import { WeatherBanner } from "../components/Weather.jsx";
 
 export default function CustomerKiosk() {
   const [menu, setMenu] = useState([]);
@@ -101,6 +102,21 @@ useEffect(() => {
     "Decrease quantity of",
     "Increase quantity of",
     "Order total",
+
+    // Weather banner
+    "Today's weather",
+    "Clear",
+    "Partly cloudy",
+    "Cloudy",
+    "Foggy",
+    "Drizzle",
+    "Rain",
+    "Snow",
+    "Thunderstorms",
+    "Rainy day? Warm up with a cozy milk tea.",
+    "It's hot out! Cool off with an iced fruit tea.",
+    "Chilly today. A warm milk tea hits the spot.",
+    "Perfect weather for a classic milk tea.",
 
     // Confirmation page
     "Thank you!",
@@ -335,6 +351,10 @@ useEffect(() => {
   const [confirmation, setConfirmation] = useState(null); //the placed order, shown after checkout
   const [showReceipt, setShowReceipt] = useState(false);
   const user = useCurrentUser(); //logged-in customer, if any
+  const [reviewing, setReviewing] = useState(false); // showing the order review step
+  const [confirmation, setConfirmation] = useState(null); // placed order number
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const { subtotal, tax, total } = orderTotals(cart);
 
@@ -371,6 +391,24 @@ useEffect(() => {
 
   function removeFromCart(cartId) {
     setCart(cart.filter((i) => i.cartId !== cartId));
+  function removeFromCart(cartId) {
+    setCart(cart.filter((i) => i.cartId !== cartId));
+  }
+
+  async function checkout() {
+    if (submitting || cart.length === 0) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const order = await placeOrder(cart, { source: "Kiosk" });
+      setCart([]);
+      setReviewing(false);
+      setConfirmation(order.number);
+    } catch (error) {
+      setSubmitError(`Order not submitted: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (reviewing) {
@@ -381,6 +419,8 @@ useEffect(() => {
         onRemove={removeFromCart}
         onBack={() => setReviewing(false)}
         onConfirm={checkout}
+        submitting={submitting}
+        submitError={submitError}
         t={t}
       />
     );
@@ -434,6 +474,8 @@ useEffect(() => {
           </select>
         </div>
       </header>
+
+      <WeatherBanner t={t} />
 
       <div className="kiosk-search">
         <label htmlFor="kiosk-drink-search">{t("Search drinks")}</label>

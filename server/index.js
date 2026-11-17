@@ -1,4 +1,4 @@
-
+import { requireRole } from "./middleware/authorize.js";
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
@@ -8,10 +8,15 @@ import session from "express-session";
 import authRoutes from "./routes/auth.js";
 import connectPgSimple from "connect-pg-simple";
 import ordersRouter from "./routes/orders.js";
+import posRouter from "./routes/pos.js";
 import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
 import shiftsRouter from "./routes/shifts.js";
 
+import assistantRouter from "./routes/assistant.js";
+import weatherRouter from "./routes/weather.js";
+import employeesRouter from "./routes/employees.js";
+import refundsRouter, { ensureRefundTable } from "./routes/refunds.js";
 
 const app = express();
 
@@ -79,9 +84,6 @@ app.get("/api/menu", async (req, res) => {
   }
 });
 
-app.use("/api/inventory", inventoryRoutes);
-app.use("/api/images", imagesRouter);
-app.use("/api/translate", translateRouter);
 const PgSession = connectPgSimple(session);
 
 if (!process.env.SESSION_SECRET) {
@@ -108,7 +110,6 @@ app.use(
   })
 );
 
-
 function requireTrustedOrigin(req, res, next) {
   const allowedOrigin =
     process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -126,6 +127,13 @@ function requireTrustedOrigin(req, res, next) {
 
 app.use("/api/auth/logout", requireTrustedOrigin);
 app.use("/api/auth", authRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/images", imagesRouter);
+app.use("/api/translate", translateRouter);
+app.use("/api/assistant", assistantRouter);
+app.use("/api/weather", weatherRouter);
+app.use("/api/employees", employeesRouter);
+app.use("/api/refunds", refundsRouter);
 
 app.get("/", (req, res) => {
   res.send(`
@@ -163,6 +171,10 @@ app.get("/", (req, res) => {
             — Start Google authentication
           </li>
           <li>
+            <a href="/api/weather">Weather Forecast</a>
+            — College Station forecast and drink suggestion
+          </li>
+          <li>
             <a href="/api/auth/me">Current Session</a>
             — Check logged-in user
           </li>
@@ -178,6 +190,12 @@ app.get("/", (req, res) => {
 });
 app.use("/api/orders", ordersRouter);
 app.use("/api/shifts", shiftsRouter);
+app.use("/api/pos/orders", posRouter);
+// Create the order_refund table if it doesn't exist yet (SCRUM-41).
+ensureRefundTable().catch((error) =>
+  console.error("Could not create order_refund table:", error.message)
+);
+
 app.listen(PORT, () => {
   console.log(`Boba Bliss API running on port ${PORT}`);
 });

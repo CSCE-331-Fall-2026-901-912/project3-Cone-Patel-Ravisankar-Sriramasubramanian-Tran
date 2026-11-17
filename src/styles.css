@@ -475,6 +475,67 @@ h1, h2, .hub-card-title {
   letter-spacing: 0.4rem;
 }
 
+.hub-card-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.hub-card-locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.hub-auth-section {
+  text-align: center;
+}
+
+.hub-auth-message {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 12px;
+}
+
+.hub-user-info {
+  text-align: center;
+}
+
+.hub-user-info p {
+  margin: 4px 0;
+}
+
+.hub-user-email {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.hub-user-info .hub-user-role {
+  display: block;
+  width: fit-content;
+  margin: 8px auto 4px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #fbe7e2;
+  color: #7b5140;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.hub-signout-btn {
+  margin-top: 12px;
+  padding: 10px 24px;
+  border: 1px solid #b98c76;
+  border-radius: 8px;
+  background: transparent;
+  color: #7b5140;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.hub-signout-btn:hover {
+  background: #f5e9e2;
+}
 
 /* Manager Orders search and filtering */
 
@@ -1999,3 +2060,121 @@ h1, h2, .hub-card-title {
 }
 
 .clock-in-out { display: flex; align-items: center; gap: 0.5rem; }
+/* Manager Reports: seven-day revenue and order-channel visualizations */
+.report-chart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 1.2rem;
+  margin: 1.5rem 0;
+}
+.revenue-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+  height: 225px;
+  padding-top: 0.5rem;
+}
+.revenue-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.revenue-value { font-size: 0.73rem; white-space: nowrap; }
+.revenue-track {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  width: min(100%, 48px);
+  overflow: hidden;
+  background: #f1ebe5;
+  border-radius: 6px 6px 0 0;
+}
+.revenue-fill {
+  width: 100%;
+  background: #a36a4b;
+  border-radius: 6px 6px 0 0;
+}
+.revenue-label { font-size: 0.72rem; white-space: nowrap; text-align: center; }
+.channel-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 1.2rem 0;
+}
+.channel-donut {
+  display: grid;
+  place-items: center;
+  width: 155px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.channel-donut-empty { background: #e8e2dc; }
+.channel-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 105px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+}
+.channel-inner strong { font-size: 1.7rem; }
+.channel-inner span { font-size: 0.8rem; }
+.channel-legend p { display: flex; align-items: center; gap: 0.5rem; }
+.channel-swatch { display: inline-block; width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.kiosk-swatch { background: #aa6b48; }
+.cashier-swatch { background: #d4bba4; }
+@media (max-width: 900px) {
+  .report-chart-grid { grid-template-columns: 1fr; }
+  .revenue-value { font-size: 0.63rem; }
+}
+
+
+/* Manager inventory restock history */
+.restock-history {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #e6cfc2;
+  border-radius: 1rem;
+  background: #fffdfa;
+}
+.restock-history-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.restock-history-heading h2 { margin: 0 0 0.4rem; }
+.restock-history-heading label { display: grid; gap: 0.35rem; }
+.restock-error { color: #a22626; font-weight: 600; }
+
+/* ---------- Boba Buddy assistant ---------- */
+.assistant-widget { position: fixed; right: 22px; bottom: 22px; z-index: 1200; font-family: "DM Sans", sans-serif; }
+.assistant-launcher { border: 0; border-radius: 999px; padding: 14px 19px; background: #98634b; color: white; box-shadow: 0 6px 22px #4b2b2030; font-weight: 700; min-height: 48px; }
+.assistant-launcher:hover { background: #7f4f3b; }
+.assistant-panel { width: min(390px, calc(100vw - 32px)); height: min(560px, calc(100dvh - 115px)); background: #fffaf5; border: 2px solid #e9cfc3; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 42px #3f271c34; display: flex; flex-direction: column; margin-bottom: 12px; color: #58392f; }
+.assistant-header { background: #98634b; color: white; padding: 15px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.assistant-header strong { display: block; font-size: 1.1rem; }
+.assistant-header span { display: block; font-size: 0.78rem; opacity: 0.9; margin-top: 2px; }
+.assistant-header button { border: 0; background: transparent; color: white; font-size: 1.8rem; line-height: 1; padding: 2px 8px; }
+.assistant-conversation { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 16px; min-height: 0; }
+.assistant-message { max-width: 89%; border-radius: 16px; padding: 10px 13px; margin: 0; font-size: .9rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.assistant-message-assistant { background: #f4e7df; align-self: flex-start; border-bottom-left-radius: 4px; }
+.assistant-message-user { background: #98634b; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+.assistant-suggestions { display: flex; flex-wrap: wrap; gap: 7px; }
+.assistant-suggestions button { border: 1px solid #c9a694; background: white; color: #58392f; border-radius: 999px; padding: 8px 11px; text-align: left; font-size: .8rem; }
+.assistant-error { color: #a33a2a; font-size: .85rem; margin: 0; }
+.assistant-compose { display: flex; gap: 8px; border-top: 1px solid #e9cfc3; padding: 10px; background: white; }
+.assistant-compose input { flex: 1; min-width: 0; border: 1px solid #d9bdb0; border-radius: 10px; padding: 10px 12px; font: inherit; color: #58392f; }
+.assistant-compose button { border: none; border-radius: 10px; padding: 10px 13px; color: white; background: #98634b; font-weight: 700; }
+.assistant-disclaimer { font-size: .68rem; color: #896e61; margin: 0; padding: 0 12px 10px; background: white; }
+.assistant-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (max-width: 480px) { .assistant-widget { right: 10px; bottom: 10px; } .assistant-panel { height: min(530px, calc(100dvh - 90px)); } }

@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SHOP_NAME, CATEGORIES, getMenu, addMenuItem, updateMenuItem, deleteMenuItem, MENU_KEYS } from "../data/menu.js";
-import { getAllOrders, ORDER_KEYS, itemPrice } from "../data/orders.js";
-import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS } from "../data/inventory.js";
-import { getEmployees, addEmployee, updateEmployee, ROLES, EMPLOYEE_KEYS } from "../data/employees.js";
+import { getAllOrders, ORDER_KEYS, itemPrice, netTotal } from "../data/orders.js";
+import RefundDialog from "../components/RefundDialog.jsx";
+import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
+import EmployeesTab from "../components/EmployeesTab.jsx";
 import { useLive, money } from "../data/store.js";
 import ShiftReport from "../components/ShiftReport.jsx";
+import { WeatherForecast } from "../components/Weather.jsx";
 
 const TABS = ["Overview", "Reports", "Orders", "Menu", "Inventory", "Employees", "Shifts"];
 
@@ -49,7 +51,7 @@ function Overview() {
 
   const startOfDay = new Date().setHours(0, 0, 0, 0);
   const today = orders.filter((o) => o.placedAt >= startOfDay);
-  const revenue = today.reduce((sum, o) => sum + o.total, 0);
+  const revenue = today.reduce((sum, o) => sum + netTotal(o), 0); // after refunds
   const lowStock = inventory.filter(isLowStock);
 
   // Drinks sold today, most popular first.
@@ -106,6 +108,8 @@ function Overview() {
           )}
         </section>
       </div>
+
+      <WeatherForecast />
     </>
   );
 }
@@ -145,7 +149,7 @@ function Reports() {
 
   // Daily sales calculations
   const revenue = dailyOrders.reduce(
-    (sum, o) => sum + (Number(o.total) || 0), 0
+    (sum, o) => sum + netTotal(o), 0 // after refunds
   );
 
   const subtotal = dailyOrders.reduce(
@@ -204,6 +208,19 @@ function Reports() {
   );
 
   const lowStock = inventory.filter(isLowStock);
+
+  // Aggregate orders by local calendar date for the selected seven-day period.
+  const revenueTrend = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(`${date}T12:00:00`);
+    day.setDate(day.getDate() - (6 - index));
+    const key = localDateKey(day.getTime());
+    const dayOrders = orders.filter((order) => localDateKey(order.placedAt) === key);
+    return {
+      date: key,
+      label: day.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      revenue: dayOrders.reduce((sum, order) => sum + netTotal(order), 0),
+    };
+  });
 
   return (
     <>
@@ -287,6 +304,21 @@ function Reports() {
           </table>
         </div>
       </section>
+
+      {/* Report visualizations: based on the same browser orders as the tables. */}
+      <div className="report-chart-grid">
+        <section className="panel" aria-label="Seven-day revenue chart">
+          <h2>Revenue trend (7 days)</h2>
+          <p className="muted">Seven days ending on the selected report date.</p>
+          <RevenueChart values={revenueTrend} />
+        </section>
+
+        <section className="panel" aria-label="Order channel chart">
+          <h2>Orders by channel</h2>
+          <p className="muted">Orders placed on the selected report date.</p>
+          <ChannelChart kiosk={kioskOrders.length} cashier={cashierOrders.length} />
+        </section>
+      </div>
 
       {/* Product sales report */}
       <section
@@ -413,6 +445,64 @@ function Reports() {
   );
 }
 
+// Small, dependency-free charts; no charting library or backend is required.
+function RevenueChart({ values }) {
+  const maxRevenue = Math.max(1, ...values.map((value) => value.revenue));
+  const hasSales = values.some((value) => value.revenue > 0);
+
+  return (
+    <>
+      {!hasSales && <p className="muted">No sales recorded in this seven-day period.</p>}
+      <div
+        className="revenue-chart"
+        role="img"
+        aria-label={values.map((value) => `${value.label}: ${money(value.revenue)}`).join(", ")}
+      >
+        {values.map((value) => (
+          <div className="revenue-column" key={value.date}>
+            <span className="revenue-value">{money(value.revenue)}</span>
+            <div className="revenue-track">
+              <div
+                className="revenue-fill"
+                style={{ height: `${(value.revenue / maxRevenue) * 100}%` }}
+              />
+            </div>
+            <span className="revenue-label">{value.label}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ChannelChart({ kiosk, cashier }) {
+  const total = kiosk + cashier;
+  const kioskPercent = total ? Math.round((kiosk / total) * 100) : 0;
+  const cashierPercent = total ? 100 - kioskPercent : 0;
+
+  return (
+    <div className="channel-chart">
+      <div
+        className={`channel-donut ${total === 0 ? "channel-donut-empty" : ""}`}
+        role="img"
+        aria-label={`${kiosk} kiosk orders and ${cashier} cashier orders`}
+        style={total ? {
+          background: `conic-gradient(#aa6b48 0 ${kioskPercent}%, #d4bba4 ${kioskPercent}% 100%)`,
+        } : undefined}
+      >
+        <div className="channel-inner">
+          <strong>{total}</strong>
+          <span>orders</span>
+        </div>
+      </div>
+      <div className="channel-legend">
+        <p><span className="channel-swatch kiosk-swatch" /> Kiosk: {kiosk} ({kioskPercent}%)</p>
+        <p><span className="channel-swatch cashier-swatch" /> Cashier: {cashier} ({cashierPercent}%)</p>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Orders ---------------- */
 
 
@@ -422,6 +512,20 @@ function Orders() {
   // Keep track of the manager's search and filter selections.
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [refunding, setRefunding] = useState(null); // order number in the cancel/refund window
+  const [notice, setNotice] = useState("");
+
+  const refundingOrder = orders.find((o) => o.number === refunding);
+
+  function handleRefundDone(refund) {
+    setRefunding(null);
+    setNotice(
+      refund.type === "cancellation"
+        ? `Order #${refund.orderId} cancelled. ${money(refund.amount)} refunded.`
+        : `Refunded ${money(refund.amount)} for order #${refund.orderId}.`
+    );
+    window.setTimeout(() => setNotice(""), 6000);
+  }
 
   const searchTerm = search.trim().toLowerCase();
 
@@ -476,6 +580,7 @@ function Orders() {
             <option value="new">New</option>
             <option value="in-progress">In progress</option>
             <option value="ready">Ready</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </label>
 
@@ -492,6 +597,12 @@ function Orders() {
       <p className="muted" role="status">
         Showing {filteredOrders.length} of {orders.length} orders
       </p>
+
+      {notice && (
+        <p className="manager-notice" role="status">
+          {notice}
+        </p>
+      )}
 
       {filteredOrders.length === 0 ? (
         <p className="muted">
@@ -510,12 +621,15 @@ function Orders() {
                 <th>Payment</th>
                 <th className="num">Total</th>
                 <th>Status</th>
+                <th>
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {filteredOrders.map((o) => (
-                <tr key={o.number}>
+                <tr key={o.number} className={o.status === "cancelled" ? "row-cancelled" : ""}>
                   <td>#{o.number}</td>
                   <td>
                     {new Date(o.placedAt).toLocaleString([], {
@@ -533,21 +647,51 @@ function Orders() {
                       .join(", ")}
                   </td>
                   <td>{o.payment}</td>
-                  <td className="num">{money(o.total)}</td>
+                  <td className="num">
+                    {money(o.total)}
+                    {o.refund?.type === "refund" && (
+                      <span className="refund-note">−{money(o.refund.amount)} refunded</span>
+                    )}
+                  </td>
                   <td>
                     <span className={`status status-${o.status}`}>
                       {o.status === "in-progress"
                         ? "In progress"
                         : o.status === "ready"
                           ? "Ready"
-                          : "New"}
+                          : o.status === "cancelled"
+                            ? "Cancelled"
+                            : "New"}
                     </span>
+                  </td>
+                  <td className="order-actions-cell">
+                    {o.refund ? (
+                      <span
+                        className="muted small"
+                        title={`${o.refund.reason}${o.refund.employee ? ` · by ${o.refund.employee}` : ""}`}
+                      >
+                        {o.refund.type === "cancellation" ? "Cancelled" : "Refunded"}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => setRefunding(o.number)}
+                        aria-label={`Cancel or refund order ${o.number}`}
+                      >
+                        Cancel / Refund
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {refundingOrder && (
+        <RefundDialog order={refundingOrder} onClose={() => setRefunding(null)} onDone={handleRefundDone} />
       )}
     </>
   );
@@ -556,7 +700,139 @@ function Orders() {
 
 /* ---------------- Menu ---------------- */
 
+// The database menu is read-only until menu write endpoints are implemented.
+// Keep the existing browser-local editor available, but clearly separate it
+// so that a local change cannot be mistaken for a PostgreSQL update.
 function MenuTab() {
+  const [view, setView] = useState("database");
+
+  return (
+    <>
+      <div className="order-filters" role="group" aria-label="Menu data source">
+        <button
+          type="button"
+          className={`btn ${view === "database" ? "btn-primary" : ""}`}
+          onClick={() => setView("database")}
+          aria-pressed={view === "database"}
+        >
+          Database menu
+        </button>
+        <button
+          type="button"
+          className={`btn ${view === "local" ? "btn-primary" : ""}`}
+          onClick={() => setView("local")}
+          aria-pressed={view === "local"}
+        >
+          Local menu editor
+        </button>
+      </div>
+      {view === "database" ? <DatabaseMenuTab /> : <LocalMenuTab />}
+    </>
+  );
+}
+
+function DatabaseMenuTab() {
+  const [menu, setMenu] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadDatabaseMenu() {
+      setLoading(true);
+      setError("");
+      try {
+        // Same API host and response format used by CustomerKiosk.jsx.
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+        const response = await fetch(`${apiUrl}/api/menu`, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Menu request failed (${response.status})`);
+        const data = await response.json();
+        if (!Array.isArray(data.items)) throw new Error("Unexpected menu response");
+        const items = data.items.map((item) => ({
+          id: item.menu_id,
+          name: String(item.item_name ?? ""),
+          category: String(item.category ?? ""),
+          price: Number(item.price),
+          active: item.availability === true || item.availability === 1 || item.availability === "true",
+        }));
+        if (!controller.signal.aborted) setMenu(items);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error("Unable to load database menu:", err);
+          setError("Unable to load menu from PostgreSQL. Make sure the backend is running and connected to the database.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    loadDatabaseMenu();
+    return () => controller.abort();
+  }, [reload]);
+
+  const term = search.trim().toLowerCase();
+  const filteredMenu = menu.filter((item) =>
+    item.name.toLowerCase().includes(term) || item.category.toLowerCase().includes(term)
+  );
+
+  return (
+    <section aria-label="PostgreSQL menu">
+      <h2>Database menu</h2>
+      <p className="muted">
+        These drinks are loaded from GET /api/menu. Viewing is database-backed;
+        adding, editing and deleting in PostgreSQL will need separate write endpoints.
+        The Local menu editor does not save changes to PostgreSQL.
+      </p>
+      <div className="order-filters">
+        <label>
+          Search database menu
+          <input
+            type="search"
+            placeholder="Search by drink or category"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+        <button type="button" className="btn" onClick={() => setReload((n) => n + 1)}>
+          Refresh menu
+        </button>
+      </div>
+      {loading ? (
+        <p role="status" className="muted">Loading menu from PostgreSQL…</p>
+      ) : error ? (
+        <p role="alert">{error}</p>
+      ) : (
+        <>
+          <p role="status" className="muted">
+            Showing {filteredMenu.length} of {menu.length} database drinks
+          </p>
+          {filteredMenu.length === 0 ? (
+            <p className="muted">{menu.length ? "No drinks match your search." : "No drinks in the database menu."}</p>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr><th>Drink</th><th>Category</th><th className="num">Price ($)</th><th>On menu</th></tr></thead>
+                <tbody>
+                  {filteredMenu.map((drink) => (
+                    <tr key={drink.id} className={drink.active ? "" : "row-off"}>
+                      <td>{drink.name}</td>
+                      <td>{drink.category}</td>
+                      <td className="num">{Number.isFinite(drink.price) ? money(drink.price) : "—"}</td>
+                      <td>{drink.active ? "Yes" : "No"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function LocalMenuTab() {
   const menu = useLive(getMenu, MENU_KEYS);
   const [form, setForm] = useState({ name: "", category: "Seasonal", price: "" });
 
@@ -792,6 +1068,9 @@ function MenuTab() {
 
 function InventoryTab() {
   const inventory = useLive(getInventory, INVENTORY_KEYS);
+  const restockHistory = useLive(getRestockHistory, RESTOCK_HISTORY_KEYS);
+  const [historySearch, setHistorySearch] = useState("");
+  const [restockError, setRestockError] = useState("");
   
   // Inventory search and low-stock filtering.
   const [search, setSearch] = useState("");
@@ -845,16 +1124,17 @@ function InventoryTab() {
       return;
     }
 
-    // Add the entered amount to the existing stock.
-    updateInventoryItem(item.id, {
-      quantity: item.quantity + amount,
-    });
-
-    // Clear the input after restocking.
-    setRestockAmounts((prev) => ({
-      ...prev,
-      [item.id]: "",
-    }));
+    try {
+      restockInventoryItem(item.id, amount);
+      setRestockError("");
+      // Clear the input only after a successful restock.
+      setRestockAmounts((prev) => ({
+        ...prev,
+        [item.id]: "",
+      }));
+    } catch (error) {
+      setRestockError(error.message || "Unable to save restock.");
+    }
   }
 
 
@@ -923,6 +1203,8 @@ function InventoryTab() {
         </p>
       )}
 
+      {restockError && <p role="alert" className="restock-error">{restockError}</p>}
+
       <div className="table-wrap">
         <table className="data-table">
           <thead>
@@ -988,73 +1270,60 @@ function InventoryTab() {
           </tbody>
         </table>
       </div>
+
+      <section className="restock-history" aria-label="Inventory restock history">
+        <div className="restock-history-heading">
+          <div>
+            <h2>Restock history</h2>
+            <p className="muted">Records quantities added using the Restock button on this browser. Direct quantity edits are not tracked.</p>
+          </div>
+          <label>
+            Search history
+            <input
+              type="search"
+              placeholder="Filter by item"
+              value={historySearch}
+              onChange={(event) => setHistorySearch(event.target.value)}
+            />
+          </label>
+        </div>
+        {(() => {
+          const entries = restockHistory
+            .filter((entry) => entry.itemName.toLowerCase().includes(historySearch.trim().toLowerCase()))
+            .sort((a, b) => new Date(b.restockedAt) - new Date(a.restockedAt));
+          return entries.length === 0 ? (
+            <p className="muted">{restockHistory.length === 0 ? "No restocks recorded yet. Use Add in the Restock column to create the first entry." : "No restock history matches your search."}</p>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Date &amp; time</th>
+                    <th>Item</th>
+                    <th className="num">Added</th>
+                    <th className="num">Before</th>
+                    <th className="num">After</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>{new Date(entry.restockedAt).toLocaleString()}</td>
+                      <td>{entry.itemName}</td>
+                      <td className="num">+{entry.amount} {entry.unit}</td>
+                      <td className="num">{entry.previousQuantity}</td>
+                      <td className="num">{entry.newQuantity}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
+      </section>
     </>
   );
 }
 
 /* ---------------- Employees ---------------- */
-
-function EmployeesTab() {
-  const employees = useLive(getEmployees, EMPLOYEE_KEYS);
-  const [form, setForm] = useState({ name: "", role: "Cashier" });
-
-  function submit(e) {
-    e.preventDefault();
-    if (!form.name.trim()) return;
-    addEmployee({ name: form.name.trim(), role: form.role });
-    setForm({ name: "", role: "Cashier" });
-  }
-
-  return (
-    <>
-      <form className="inline-form" onSubmit={submit} aria-label="Add employee">
-        <h2>Add an employee</h2>
-        <label>
-          Name
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        </label>
-        <label>
-          Role
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            {ROLES.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-        </label>
-        <button className="btn btn-primary">Add</button>
-      </form>
-
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((e) => (
-              <tr key={e.id} className={e.active ? "" : "row-off"}>
-                <td>{e.name}</td>
-                <td>
-                  <select className="cell-select" value={e.role} aria-label={`Role for ${e.name}`} onChange={(ev) => updateEmployee(e.id, { role: ev.target.value })}>
-                    {ROLES.map((r) => (
-                      <option key={r}>{r}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <label className="toggle">
-                    <input type="checkbox" checked={e.active} onChange={() => updateEmployee(e.id, { active: !e.active })} />
-                    {e.active ? "Yes" : "No"}
-                  </label>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
+// Employees tab lives in src/components/EmployeesTab.jsx (SCRUM-40).

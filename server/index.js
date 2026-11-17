@@ -11,6 +11,8 @@ import ordersRouter from "./routes/orders.js";
 import posRouter from "./routes/pos.js";
 import imagesRouter from "./routes/images.js";
 import translateRouter from "./routes/translate.js";
+import shiftsRouter from "./routes/shifts.js";
+
 import assistantRouter from "./routes/assistant.js";
 import weatherRouter from "./routes/weather.js";
 import employeesRouter from "./routes/employees.js";
@@ -187,6 +189,7 @@ app.get("/", (req, res) => {
   `);
 });
 app.use("/api/orders", ordersRouter);
+app.use("/api/shifts", shiftsRouter);
 app.use("/api/pos/orders", posRouter);
 // Create the order_refund table if it doesn't exist yet (SCRUM-41).
 ensureRefundTable().catch((error) =>

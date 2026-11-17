@@ -20,24 +20,6 @@ export function orderTotals(items) {
   return { subtotal, tax, total: subtotal + tax };
 }
 
-// Future: POST /api/orders
-// source is "Kiosk" or "Cashier"; employee and payment are only set by the cashier.
-export function placeOrder(items, { source, employee = null, payment = "Card", customerName = null }) {
-  const number = Number(localStorage.getItem(NEXT_KEY) || 101);
-  localStorage.setItem(NEXT_KEY, String(number + 1));
-  const order = {
-    number,
-    items,
-    source,
-    employee,
-    payment,
-    customerName,
-    ...orderTotals(items),
-    status: "new", // new -> in-progress -> ready
-    placedAt: Date.now(),
-  };
-  save(KEY, [...readAll(), order]);
-  return order;
 // Backend is authoritative. An unsuccessful submission never clears the cart or
 // creates a fake local order. Local storage is only a view cache for other tabs.
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";

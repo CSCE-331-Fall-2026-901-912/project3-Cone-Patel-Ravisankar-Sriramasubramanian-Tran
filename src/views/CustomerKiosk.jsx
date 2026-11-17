@@ -351,8 +351,6 @@ useEffect(() => {
   const [confirmation, setConfirmation] = useState(null); //the placed order, shown after checkout
   const [showReceipt, setShowReceipt] = useState(false);
   const user = useCurrentUser(); //logged-in customer, if any
-  const [reviewing, setReviewing] = useState(false); // showing the order review step
-  const [confirmation, setConfirmation] = useState(null); // placed order number
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -381,16 +379,6 @@ useEffect(() => {
     setCart(cart.map((i) => (i.cartId === cartId ? { ...i, quantity } : i)));
   }
 
-  function checkout() {
-    const order = placeOrder(cart, { source: "Kiosk", customerName: user?.name ?? null });
-    setCart([]);
-    setReviewing(false);
-    setConfirmation(order);
-    setShowReceipt(true);
-  }
-
-  function removeFromCart(cartId) {
-    setCart(cart.filter((i) => i.cartId !== cartId));
   function removeFromCart(cartId) {
     setCart(cart.filter((i) => i.cartId !== cartId));
   }
@@ -400,10 +388,11 @@ useEffect(() => {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const order = await placeOrder(cart, { source: "Kiosk" });
+      const result = await placeOrder(cart, { source: "Kiosk" });
+      setConfirmation({ ...result, items: cart, payment: "Card", customerName: user?.name ?? null, placedAt: Date.now() });
+      setShowReceipt(true);
       setCart([]);
       setReviewing(false);
-      setConfirmation(order.number);
     } catch (error) {
       setSubmitError(`Order not submitted: ${error.message}`);
     } finally {

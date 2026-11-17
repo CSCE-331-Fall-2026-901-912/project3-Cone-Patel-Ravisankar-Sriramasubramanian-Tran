@@ -1,14 +1,30 @@
 import { useEffect, useState } from "react";
+import { fetchMenu } from "../data/api.js";
 import { CATEGORIES } from "../data/menu.js";
 import { getEmployees, EMPLOYEE_KEYS } from "../data/employees.js";
 import { placeOrder, itemPrice, orderTotals, getActiveOrders, ORDER_KEYS } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
+import Receipt from "../components/Receipt.jsx";
 
-// Built for speed: every drink on one screen, grouped by category,
-// with the current order always visible on the right.
+//built for speed: every drink on one screen, grouped by category
+//with the current order always visible on the right
 export default function CashierScreen() {
   const [menu, setMenu] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState("");
+
+  //load the live menu from the backend
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchMenu(controller.signal)
+      .then(setMenu)
+      .catch((err) => err.name !== "AbortError" && setMenuError(err.message))
+      .finally(() => setMenuLoading(false));
+    return () => controller.abort();
+  }, []);
+
+  const categories = [...new Set(menu.map((d) => d.category))];
   const [menuError, setMenuError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
@@ -32,12 +48,20 @@ export default function CashierScreen() {
   const [employeeId, setEmployeeId] = useState(employees[0]?.id ?? "");
   const [customizing, setCustomizing] = useState(null);
   const [cart, setCart] = useState([]);
-  const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [pendingPayment, setPendingPayment] = useState(null);
+  const [receipt, setReceipt] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const { subtotal, tax, total } = orderTotals(cart);
   const employee = employees.find((e) => e.id === Number(employeeId));
+  //close the payment confirmation with the Escape key
+  useEffect(() => {
+    if (!pendingPayment) return undefined;
+    const onKey = (e) => e.key === "Escape" && setPendingPayment(null);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pendingPayment]);
 
 const query = search.trim().toLowerCase();
 const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(query)) : menu;
@@ -55,6 +79,11 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
       .filter((item) => item.quantity > 0));
   }
 
+  function charge(payment) {
+    setPendingPayment(null);
+    const order = placeOrder(cart, { source: "Cashier", employee: employee?.name ?? null, payment });
+    setCart([]);
+    setReceipt(order);
   async function charge(payment) {
     if (submitting || cart.length === 0) return;
     setSubmitting(true);
@@ -107,6 +136,9 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
           <p className="muted" role="status">
             {query && visibleMenu.length === 0 ? `No drinks match "${search.trim()}".` : ""}
           </p>
+          {menuLoading && <p className="muted" role="status">Loading menu...</p>}
+          {menuError && <p className="muted" role="alert">{menuError}</p>}
+          {categories.filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
           {menuError && <p role="alert">Menu unavailable: {menuError}</p>}
           {[...new Set([...CATEGORIES, ...visibleMenu.map((d) => d.category)])].filter((c) => visibleMenu.some((d) => d.category === c)).map((c) => (
             <div key={c} className="cashier-category">
@@ -176,6 +208,11 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
             <span>{money(total)}</span>
           </div>
           <div className="pay-buttons">
+            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => setPendingPayment("Cash")}>
+              Cash
+            </button>
+            <button className="btn btn-primary btn-lg" disabled={cart.length === 0} onClick={() => setPendingPayment("Card")}>
+              Card
             <button className="btn btn-primary btn-lg" disabled={cart.length === 0 || submitting} onClick={() => charge("Cash")}>
               {submitting ? "Submitting…" : "Cash"}
             </button>
@@ -183,13 +220,24 @@ const visibleMenu = query ? menu.filter((d) => d.name.toLowerCase().includes(que
               {submitting ? "Submitting…" : "Card"}
             </button>
           </div>
-          <p className="cashier-message" role="status">
-            {message}
-          </p>
         </aside>
       </div>
-
+      {pendingPayment && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+          <div className="dialog dialog-compact">
+            <h2 id="confirm-title">Confirm {pendingPayment} payment</h2>
+            <p>
+              {cart.reduce((n, i) => n + i.quantity, 0)} item(s) · <strong>{money(total)}</strong> by {pendingPayment.toLowerCase()}. Send this order to the kitchen?
+            </p>
+            <div className="dialog-actions">
+              <button className="btn" autoFocus onClick={() => setPendingPayment(null)}>Cancel</button>
+              <button className="btn btn-primary" onClick={() => charge(pendingPayment)}>Confirm {pendingPayment}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {customizing && <CustomizeDialog drink={customizing} onAdd={addToCart} onCancel={() => setCustomizing(null)} />}
+      {receipt && <Receipt order={receipt} onClose={() => setReceipt(null)} />}
     </div>
   );
 }

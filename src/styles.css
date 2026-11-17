@@ -1444,8 +1444,8 @@ h1, h2, .hub-card-title {
   outline: none;
 }
 .cashier-menu > p.muted:empty {
-  display: none;}
-
+  display: none;
+}
 /* Kitchen order completion confirmation */
 
 .kitchen-confirm-overlay {

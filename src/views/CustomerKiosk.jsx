@@ -4,6 +4,8 @@ import { placeOrder, itemPrice, orderTotals } from "../data/orders.js";
 import { useLive, money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
 import OrderReview from "../components/OrderReview.jsx";
+import Receipt from "../components/Receipt.jsx";
+import { useCurrentUser } from "../data/auth.js";
 import { WeatherBanner } from "../components/Weather.jsx";
 
 export default function CustomerKiosk() {
@@ -343,8 +345,12 @@ useEffect(() => {
 
 
 
-  const [customizing, setCustomizing] = useState(null); // drink being customized
+  const [customizing, setCustomizing] = useState(null); //drink being customized
   const [cart, setCart] = useState([]);
+  const [reviewing, setReviewing] = useState(false); //showing the order review step
+  const [confirmation, setConfirmation] = useState(null); //the placed order, shown after checkout
+  const [showReceipt, setShowReceipt] = useState(false);
+  const user = useCurrentUser(); //logged-in customer, if any
   const [reviewing, setReviewing] = useState(false); // showing the order review step
   const [confirmation, setConfirmation] = useState(null); // placed order number
   const [submitting, setSubmitting] = useState(false);
@@ -375,6 +381,16 @@ useEffect(() => {
     setCart(cart.map((i) => (i.cartId === cartId ? { ...i, quantity } : i)));
   }
 
+  function checkout() {
+    const order = placeOrder(cart, { source: "Kiosk", customerName: user?.name ?? null });
+    setCart([]);
+    setReviewing(false);
+    setConfirmation(order);
+    setShowReceipt(true);
+  }
+
+  function removeFromCart(cartId) {
+    setCart(cart.filter((i) => i.cartId !== cartId));
   function removeFromCart(cartId) {
     setCart(cart.filter((i) => i.cartId !== cartId));
   }
@@ -417,7 +433,7 @@ useEffect(() => {
       <p>{t("Your order number is")}</p>
 
       <p className="order-number" aria-live="polite">
-        #{confirmation}
+        #{confirmation.number}
       </p>
 
       <p>{t("We'll call your number when your drinks are ready.")}</p>
@@ -428,6 +444,7 @@ useEffect(() => {
       >
         {t("Start a new order")}
       </button>
+      {showReceipt && <Receipt order={confirmation} onClose={() => setShowReceipt(false)} />}
     </main>
   );
 }

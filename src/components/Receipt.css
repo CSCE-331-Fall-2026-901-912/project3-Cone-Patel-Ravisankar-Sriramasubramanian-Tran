@@ -1,0 +1,13 @@
+.receipt { width: min(380px, 100%); font-variant-numeric: tabular-nums; }
+.receipt-meta { margin: 0; }
+.receipt-items { list-style: none; padding: 0.75rem 0; margin: 0.5rem 0; display: flex; flex-direction: column; gap: 0.75rem;
+  border-top: 1px dashed #999; border-bottom: 1px dashed #999; }
+.receipt-row { display: flex; justify-content: space-between; gap: 1rem; }
+.receipt-total { font-size: 1.2rem; font-weight: 700; }
+
+@media print {
+  body * { visibility: hidden; }
+  .receipt, .receipt * { visibility: visible; }
+  .receipt { position: absolute; top: 0; left: 0; }
+  .receipt .dialog-actions { display: none; }
+}

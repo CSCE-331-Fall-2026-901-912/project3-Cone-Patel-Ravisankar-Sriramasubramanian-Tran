@@ -4,6 +4,8 @@ import { placeOrder, itemPrice, orderTotals } from "../data/orders.js";
 import { money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
 import OrderReview from "../components/OrderReview.jsx";
+import Receipt from "../components/Receipt.jsx";
+import { useCurrentUser } from "../data/auth.js";
 import { WeatherBanner } from "../components/Weather.jsx";
 
 const DRINK_IMAGES = {
@@ -313,8 +315,10 @@ useEffect(() => {
 
   const [customizing, setCustomizing] = useState(null); // drink being customized
   const [cart, setCart] = useState([]);
-  const [reviewing, setReviewing] = useState(false); // showing the order review step
-  const [confirmation, setConfirmation] = useState(null); // placed order number
+  const [reviewing, setReviewing] = useState(false); //showing the order review step
+  const [confirmation, setConfirmation] = useState(null); //the placed order, shown after checkout
+  const [showReceipt, setShowReceipt] = useState(false);
+  const user = useCurrentUser(); //logged-in customer, if any
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -352,10 +356,11 @@ useEffect(() => {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const order = await placeOrder(cart, { source: "Kiosk" });
+      const result = await placeOrder(cart, { source: "Kiosk" });
+      setConfirmation({ ...result, items: cart, payment: "Card", customerName: user?.name ?? null, placedAt: Date.now() });
+      setShowReceipt(true);
       setCart([]);
       setReviewing(false);
-      setConfirmation(order.number);
     } catch (error) {
       setSubmitError(`Order not submitted: ${error.message}`);
     } finally {
@@ -385,7 +390,7 @@ useEffect(() => {
       <p>{t("Your order number is")}</p>
 
       <p className="order-number" aria-live="polite">
-        #{confirmation}
+        #{confirmation.number}
       </p>
 
       <p>{t("We'll call your number when your drinks are ready.")}</p>
@@ -396,6 +401,7 @@ useEffect(() => {
       >
         {t("Start a new order")}
       </button>
+      {showReceipt && <Receipt order={confirmation} onClose={() => setShowReceipt(false)} />}
     </main>
   );
 }

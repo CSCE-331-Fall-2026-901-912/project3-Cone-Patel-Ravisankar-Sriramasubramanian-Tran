@@ -5,9 +5,10 @@ import RefundDialog from "../components/RefundDialog.jsx";
 import { getInventory, updateInventoryItem, addInventoryItem, isLowStock, INVENTORY_KEYS, getRestockHistory, restockInventoryItem, RESTOCK_HISTORY_KEYS } from "../data/inventory.js";
 import EmployeesTab from "../components/EmployeesTab.jsx";
 import { useLive, money } from "../data/store.js";
+import ShiftReport from "../components/ShiftReport.jsx";
 import { WeatherForecast } from "../components/Weather.jsx";
 
-const TABS = ["Overview", "Reports", "Orders", "Menu", "Inventory", "Employees"];
+const TABS = ["Overview", "Reports", "Orders", "Menu", "Inventory", "Employees", "Shifts"];
 
 export default function ManagerDashboard() {
   const [tab, setTab] = useState("Overview");
@@ -36,6 +37,7 @@ export default function ManagerDashboard() {
         {tab === "Menu" && <MenuTab />}
         {tab === "Inventory" && <InventoryTab />}
         {tab === "Employees" && <EmployeesTab />}
+        {tab === "Shifts" && <ShiftReport />}
       </main>
     </div>
   );

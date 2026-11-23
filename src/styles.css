@@ -2011,18 +2011,6 @@ h1, h2, .hub-card-title {
   color: #a54f76;
 }
 
-.drink-photo-credit {
-  padding: 5px 8px 12px;
-  font-size: 11px;
-  color: #71666b;
-}
-
-.drink-photo-credit a {
-  color: inherit;
-  text-decoration: underline;
-}
-
-
 /* Position language selector in top-right of kiosk header */
 .kiosk-header {
   position: relative;

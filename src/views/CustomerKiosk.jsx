@@ -1,22 +1,59 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { SHOP_NAME } from "../data/menu.js";
 import { placeOrder, itemPrice, orderTotals } from "../data/orders.js";
-import { useLive, money } from "../data/store.js";
+import { money } from "../data/store.js";
 import CustomizeDialog, { itemSummary } from "../components/CustomizeDialog.jsx";
 import OrderReview from "../components/OrderReview.jsx";
 import { WeatherBanner } from "../components/Weather.jsx";
+
+const DRINK_IMAGES = {
+  "Classic Black Tea": "/images/classic-black-tea.png",
+  "Classic Green Tea": "/images/classic-green-tea.png",
+  "Classic Milk Tea": "/images/classic-milk-tea.png",
+  "Classic Pearl Milk Tea": "/images/classic-pearl-milk-tea.png",
+  "Coffee Milk Tea": "/images/coffee-milk-tea.png",
+  "Cupid's Kiss": "/images/cupids-kiss.png",
+  "Honey Milk Tea": "/images/honey-milk-tea.png",
+  "Lemon Green Tea": "/images/lemon-green-tea.png",
+  "Lotus Pond": "/images/lotus-pond.png",
+  "Mango Green Tea": "/images/mango-green-tea.png",
+  "Mango Ice Blended": "/images/mango-ice-blended.png",
+  "Matcha Milk Tea": "/images/matcha-milk-tea.png",
+  "Matcha Red Bean Ice Blended": "/images/matcha-red-bean-ice-blended.png",
+  "Oolong Tea": "/images/oolong-tea.png",
+  "Oreo Ice Blended": "/images/oreo-ice-blended.png",
+  "Passion Fruit Green Tea": "/images/passion-fruit-green-tea.png",
+  "Peach Green Tea": "/images/peach-green-tea.png",
+  "Pumpkin Coffee": "/images/pumpkin-coffee.png",
+  "Pumpkin Spice Milk Tea": "/images/pumpkin-spice-milk-tea.png",
+  "Strawberry Green Tea": "/images/strawberry-green-tea.png",
+  "Taro Ice Blended": "/images/taro-ice-blended.png",
+  "Taro Pearl Milk Tea": "/images/taro-pearl-milk-tea.png",
+  "Thai Pearl Milk Tea": "/images/thai-pearl-milk-tea.png",
+  "Tropical Paradise": "/images/tropical-paradise.png",
+  "Wintermelon Tea": "/images/wintermelon-tea.png",
+};
+
+function normalizeDrinkName(name) {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+const DRINK_IMAGES_BY_NAME = Object.fromEntries(
+  Object.entries(DRINK_IMAGES).map(([name, image]) => [
+    normalizeDrinkName(name),
+    image,
+  ])
+);
 
 export default function CustomerKiosk() {
   const [menu, setMenu] = useState([]);
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [menuError, setMenuError] = useState("");
-  const [drinkImages, setDrinkImages] = useState({});
   const [search, setSearch] = useState("");
   const [language, setLanguage] = useState("EN");
   const [translations, setTranslations] = useState({});
   const [translationLoading, setTranslationLoading] = useState(false);
-  const requestedImages = useRef(new Set());
 
   const categories = [...new Set(menu.map((drink) => drink.category))];
 
@@ -111,10 +148,12 @@ useEffect(() => {
     "Rain",
     "Snow",
     "Thunderstorms",
+    "Unknown",
     "Rainy day? Warm up with a cozy milk tea.",
     "It's hot out! Cool off with an iced fruit tea.",
     "Chilly today. A warm milk tea hits the spot.",
     "Perfect weather for a classic milk tea.",
+    "Translating...",
 
     // Confirmation page
     "Thank you!",
@@ -132,85 +171,76 @@ useEffect(() => {
   async function fetchTranslations() {
     setTranslationLoading(true);
 
+    const existing = translations[language] || {};
+    const missingTexts = uniqueTexts.filter((text) => !existing[text]);
+    const batchSize = 50;
+    let failedCount = 0;
+
     try {
-      // Reuse translations already fetched.
-      const existing = translations[language] || {};
+      for (let i = 0; i < missingTexts.length; i += batchSize) {
+        if (cancelled) return;
 
-      const missingTexts = uniqueTexts.filter(
-        (text) => !existing[text]
-      );
+        const batch = missingTexts.slice(i, i + batchSize);
 
-      // Translate in small batches to avoid overwhelming DeepL.
-const successfulTranslations = [];
-let failedCount = 0;
-const batchSize = 5;
+        try {
+          const response = await fetch(`${API_URL}/api/translate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: batch,
+              targetLang: language,
+            }),
+          });
 
-for (let i = 0; i < missingTexts.length; i += batchSize) {
-  if (cancelled) return;
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(
+              data.error || `Translation failed (HTTP ${response.status})`
+            );
+          }
 
-  const batch = missingTexts.slice(i, i + batchSize);
+          const data = await response.json();
+          if (
+            !Array.isArray(data.translations) ||
+            data.translations.length !== batch.length
+          ) {
+            throw new Error(
+              "Translation response did not match the requested batch."
+            );
+          }
 
-  const results = await Promise.allSettled(
-    batch.map(async (text) => {
-      const response = await fetch(`${API_URL}/api/translate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text,
-          targetLang: language,
-        }),
-      });
+          const translatedEntries = data.translations.map((item, index) => {
+            if (
+              item.text !== batch[index] ||
+              typeof item.translatedText !== "string" ||
+              !item.translatedText.trim()
+            ) {
+              throw new Error(`No translation returned for "${batch[index]}".`);
+            }
 
-      if (!response.ok) {
-        throw new Error(
-          `Translation failed: ${text} (HTTP ${response.status})`
-        );
+            return [batch[index], item.translatedText];
+          });
+
+          if (!cancelled) {
+            setTranslations((current) => ({
+              ...current,
+              [language]: {
+                ...current[language],
+                ...Object.fromEntries(translatedEntries),
+              },
+            }));
+          }
+        } catch (error) {
+          if (cancelled) return;
+          failedCount += batch.length;
+          console.error(`Translation batch failed for ${language}:`, error);
+        }
       }
 
-      const data = await response.json();
-      return [text, data.translatedText];
-    })
-  );
-
-  const successful = results
-    .filter((result) => result.status === "fulfilled")
-    .map((result) => result.value);
-
-  successfulTranslations.push(...successful);
-
-  failedCount += results.filter(
-    (result) => result.status === "rejected"
-  ).length;
-
-  // Display successful translations as each batch finishes.
-  if (!cancelled && successful.length > 0) {
-    setTranslations((current) => ({
-      ...current,
-      [language]: {
-        ...current[language],
-        ...Object.fromEntries(successful),
-      },
-    }));
-  }
-}
-
-if (failedCount > 0) {
-  console.warn(`${failedCount} translations failed for ${language}`);
-}
-      if (cancelled) return;
-
-      setTranslations((current) => ({
-        ...current,
-        [language]: {
-          ...current[language],
-          ...Object.fromEntries(successfulTranslations),
-        },
-      }));
-    } catch (error) {
-      if (!cancelled) {
-        console.error("Translation API error:", error);
+      if (failedCount > 0) {
+        console.warn(`${failedCount} translations failed for ${language}`);
       }
     } finally {
       if (!cancelled) {
@@ -278,68 +308,6 @@ useEffect(() => {
 
   return () => controller.abort();
 }, []);
-
-
-
-useEffect(() => {
-  if (menu.length === 0) return;
-
-  const controller = new AbortController();
-  const API_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:3001";
-
-  const searchTerm = search.trim().toLowerCase();
-
-  const visibleDrinks = menu.filter((drink) =>
-    searchTerm
-      ? drink.name.toLowerCase().includes(searchTerm)
-      : drink.category === category
-  );
-
-  async function fetchImages() {
-    for (const drink of visibleDrinks) {
-    if (controller.signal.aborted) break;
-
-    if (requestedImages.current.has(drink.id)) continue;
-
-    requestedImages.current.add(drink.id);
-
-    try {
-        const response = await fetch(
-          `${API_URL}/api/images?query=${encodeURIComponent(drink.name)}`,
-          { signal: controller.signal }
-        );
-
-        if (!response.ok) {
-          requestedImages.current.delete(drink.id);
-          continue;
-        }
-
-        const image = await response.json();
-
-        if (controller.signal.aborted) {
-            requestedImages.current.delete(drink.id);
-            break;
-          }
-
-          setDrinkImages((current) => ({
-            ...current,
-            [drink.id]: image,
-          }));
-      } catch (error) {
-  requestedImages.current.delete(drink.id);
-
-  if (error.name === "AbortError") break;
-
-  console.error(`Image error for ${drink.name}:`, error);
-}
-    }
-  }
-
-  fetchImages();
-
-  return () => controller.abort();
-}, [menu, category, search]);
 
 
 
@@ -458,6 +426,12 @@ useEffect(() => {
         </div>
       </header>
 
+      {translationLoading && (
+        <p className="muted small" role="status" aria-live="polite">
+          {t("Translating...")}
+        </p>
+      )}
+
       <WeatherBanner t={t} />
 
       <div className="kiosk-search">
@@ -512,9 +486,10 @@ useEffect(() => {
           className="menu-grid"
           aria-label={searchTerm ? t("Drink search results") : `${t(category)} ${t("drinks")}`}
         >
-          {filteredMenu.map((drink) => (
+          {filteredMenu.map((drink) => {
+            const imagePath = DRINK_IMAGES_BY_NAME[normalizeDrinkName(drink.name)];
 
-
+            return (
 <div key={drink.id} className="drink-card-wrapper">
   <button
     type="button"
@@ -522,10 +497,10 @@ useEffect(() => {
     onClick={() => setCustomizing(drink)}
   >
     <div className="drink-image-container">
-      {drinkImages[drink.id]?.imageUrl ? (
+      {imagePath ? (
         <img
-          src={drinkImages[drink.id].imageUrl}
-          alt={drinkImages[drink.id].alt || drink.name}
+          src={imagePath}
+          alt={t(drink.name)}
           className="drink-image"
           loading="lazy"
         />
@@ -541,30 +516,9 @@ useEffect(() => {
       <span className="drink-price">{money(drink.price)}</span>
     </div>
   </button>
-
-  {drinkImages[drink.id]?.imageUrl && (
-    <div className="drink-photo-credit">
-      Photo by{" "}
-      <a
-        href={drinkImages[drink.id].photographerUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {drinkImages[drink.id].photographer}
-      </a>
-      {" on "}
-      <a
-        href={drinkImages[drink.id].unsplashUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Unsplash
-      </a>
-    </div>
-  )}
 </div>
-
-            ))}
+            );
+          })}
 
           {filteredMenu.length === 0 && (
             <p className="kiosk-no-results">
